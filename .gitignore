@@ -1,0 +1,23 @@
+.gradle/
+.jdk8/
+build/
+run/
+src-out/
+bin/
+*.jar
+*.class
+
+# Eclipse
+.classpath
+.project
+.settings/
+*.launch
+
+# IntelliJ
+.idea/
+*.iml
+*.iws
+
+# Logs
+logs/
+*.log

@@ -1,0 +1,16 @@
+[
+{
+  "modid": "ablabla",
+  "name": "Reach Mod",
+  "description": "A reach mod converted to Forge 1.8.9.",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["Kem"],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
