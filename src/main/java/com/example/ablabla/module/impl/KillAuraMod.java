@@ -10,11 +10,11 @@ import java.util.List;
 
 public class KillAuraMod extends Module {
 
-    public float range    = 4.0f;
-    public float rotSpeed = 0.8f; // how fast to snap rotation (0-1)
+    public float range = 4.0f;
+    // Attack every N ticks (1 tick = 50ms). 1 = max speed (~20 CPS theoretical)
+    public int attackDelay = 1;
 
-    private long lastAttack = 0;
-    private static final long ATTACK_DELAY_MS = 60; // ~16 CPS max
+    private int ticksSinceAttack = 0;
 
     public KillAuraMod() {
         super("KillAura");
@@ -25,10 +25,11 @@ public class KillAuraMod extends Module {
         if (mc.thePlayer == null || mc.theWorld == null) return;
         if (mc.currentScreen != null) return;
 
+        ticksSinceAttack++;
+
         List<EntityPlayer> targets = getTargets();
         if (targets.isEmpty()) return;
 
-        // Pick closest valid target
         EntityPlayer target = null;
         double best = Double.MAX_VALUE;
         for (EntityPlayer p : targets) {
@@ -37,16 +38,23 @@ public class KillAuraMod extends Module {
         }
         if (target == null) return;
 
-        // Smooth rotation toward target
-        rotateToward(target);
+        // Aim at top of hitbox — server doesn't validate Y aim strictly
+        float[] rot = calcRotation(target, true);
 
-        // Attack on cooldown
-        long now = System.currentTimeMillis();
-        if (now - lastAttack < ATTACK_DELAY_MS) return;
-        lastAttack = now;
+        float savedYaw   = mc.thePlayer.rotationYaw;
+        float savedPitch = mc.thePlayer.rotationPitch;
 
-        mc.playerController.attackEntity(mc.thePlayer, target);
-        mc.thePlayer.swingItem();
+        mc.thePlayer.rotationYaw   = rot[0];
+        mc.thePlayer.rotationPitch = rot[1];
+
+        if (ticksSinceAttack >= attackDelay) {
+            ticksSinceAttack = 0;
+            mc.playerController.attackEntity(mc.thePlayer, target);
+            mc.thePlayer.swingItem();
+        }
+
+        mc.thePlayer.rotationYaw   = savedYaw;
+        mc.thePlayer.rotationPitch = savedPitch;
     }
 
     private List<EntityPlayer> getTargets() {
@@ -112,21 +120,30 @@ public class KillAuraMod extends Module {
         return myColor == theirColor;
     }
 
-    private void rotateToward(EntityPlayer target) {
+    private float[] calcRotation(EntityPlayer target, boolean aimTop) {
         double dx = target.posX - mc.thePlayer.posX;
         double dz = target.posZ - mc.thePlayer.posZ;
-        double dy = (target.posY + target.getEyeHeight() * 0.8)
-                  - (mc.thePlayer.posY + mc.thePlayer.getEyeHeight());
+
+        double targetY;
+        if (aimTop) {
+            // Aim at top of AABB — server doesn't validate Y hit position
+            // This gives max reach vertically since server only checks AABB intersection
+            targetY = target.posY + target.height - 0.1;
+        } else {
+            targetY = target.posY + target.getEyeHeight() * 0.8;
+        }
+
+        double dy   = targetY - (mc.thePlayer.posY + mc.thePlayer.getEyeHeight());
         double dist = Math.sqrt(dx * dx + dz * dz);
 
         float yaw   = (float)(Math.atan2(dz, dx) * 180.0 / Math.PI) - 90.0f;
         float pitch = (float)-(Math.atan2(dy, dist) * 180.0 / Math.PI);
 
-        float yawDiff   = wrapAngle(yaw   - mc.thePlayer.rotationYaw);
-        float pitchDiff = wrapAngle(pitch - mc.thePlayer.rotationPitch);
+        // Clamp pitch to valid range
+        if (pitch > 90)  pitch = 90;
+        if (pitch < -90) pitch = -90;
 
-        mc.thePlayer.rotationYaw   += yawDiff   * rotSpeed;
-        mc.thePlayer.rotationPitch += pitchDiff * rotSpeed;
+        return new float[]{ yaw, pitch };
     }
 
     private float wrapAngle(float a) {

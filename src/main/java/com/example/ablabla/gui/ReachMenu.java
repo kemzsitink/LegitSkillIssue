@@ -81,7 +81,7 @@ public class ReachMenu extends GuiScreen {
             {"BT Delay",   "Backtrack delay ms",   0f,   500f, 10f  },
             {"HitBox",     "Hitbox expand size",   0f,   30.0f, 0.05f},
             {"KA Range",   "KillAura range",       2.0f, 6.0f,  0.1f },
-            {"KA Speed",   "KillAura rot speed",   10f,  100f,  5f   },
+            {"KA Delay",   "Attack every N ticks",  1f,   10f,  1f   },
         },
         {}, // Movement
         {}, // Player
@@ -441,7 +441,7 @@ public class ReachMenu extends GuiScreen {
             case 7: return backtrack != null ? backtrack.delayMs         : 150f;
             case 8: return hitBox    != null ? hitBox.expand             : 0.2f;
             case 9: { KillAuraMod ka = ModuleManager.INSTANCE.getModule(KillAuraMod.class); return ka != null ? ka.range : 4.0f; }
-            case 10: { KillAuraMod ka = ModuleManager.INSTANCE.getModule(KillAuraMod.class); return ka != null ? ka.rotSpeed * 100f : 80f; }
+            case 10: { KillAuraMod ka = ModuleManager.INSTANCE.getModule(KillAuraMod.class); return ka != null ? ka.attackDelay : 1f; }
         }
         return 0;
     }
@@ -458,7 +458,7 @@ public class ReachMenu extends GuiScreen {
             case 7: if (backtrack != null) backtrack.delayMs        = (int) v;    break;
             case 8: if (hitBox    != null) hitBox.expand            = v;          break;
             case 9: { KillAuraMod ka = ModuleManager.INSTANCE.getModule(KillAuraMod.class); if (ka != null) ka.range = v; break; }
-            case 10: { KillAuraMod ka = ModuleManager.INSTANCE.getModule(KillAuraMod.class); if (ka != null) ka.rotSpeed = v / 100f; break; }
+            case 10: { KillAuraMod ka = ModuleManager.INSTANCE.getModule(KillAuraMod.class); if (ka != null) ka.attackDelay = (int) v; break; }
         }
     }
 
