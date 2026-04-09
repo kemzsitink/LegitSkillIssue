@@ -6,14 +6,15 @@ import net.minecraft.network.play.INetHandlerPlayClient;
 import net.minecraft.network.play.server.S14PacketEntity;
 import net.minecraft.network.play.server.S18PacketEntityTeleport;
 import java.lang.reflect.Field;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class BacktrackMod extends Module {
-    private final Map<Integer, Queue<DelayedPacket>> packetMap = new HashMap<>();
-    private final int delayMs = 150;
+    private final Map<Integer, Queue<DelayedPacket>> packetMap = new ConcurrentHashMap<>();
+    public int delayMs  = 150;
+    private static final int MAX_QUEUE = 20;
     private Field s14EntityIdField;
 
     public BacktrackMod() {
@@ -68,8 +69,10 @@ public class BacktrackMod extends Module {
             } catch (Exception e) {}
 
             if (id != -1 && id != mc.thePlayer.getEntityId()) {
-                packetMap.computeIfAbsent(id, k -> new LinkedList<>()).add(new DelayedPacket((Packet<INetHandlerPlayClient>) packet, System.currentTimeMillis()));
-                return true; 
+                Queue<DelayedPacket> q = packetMap.computeIfAbsent(id, k -> new LinkedList<>());
+                if (q.size() < MAX_QUEUE) // drop if queue too full
+                    q.add(new DelayedPacket((Packet<INetHandlerPlayClient>) packet, System.currentTimeMillis()));
+                return true;
             }
         }
         return false;

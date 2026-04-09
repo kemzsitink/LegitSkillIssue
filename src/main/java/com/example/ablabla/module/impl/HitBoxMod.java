@@ -1,11 +1,12 @@
 package com.example.ablabla.module.impl;
 
 import com.example.ablabla.module.Module;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.AxisAlignedBB;
 
 public class HitBoxMod extends Module {
-    private float expandSize = 0.25f;
+
+    public float expand = 0.2f;
 
     public HitBoxMod() {
         super("HitBox");
@@ -13,34 +14,37 @@ public class HitBoxMod extends Module {
 
     @Override
     public void onTick() {
-        if (mc.theWorld == null) return;
-
-        // Quét tất cả người chơi trong thế giới
-        for (EntityPlayer player : mc.theWorld.playerEntities) {
-            if (player == mc.thePlayer || player.isDead) continue;
-
-            // Mở rộng HitBox (BoundingBox) của đối thủ
-            // Lưu ý: Ghost HitBox chuyên nghiệp chỉ nên thay đổi kích thước va chạm, không nên đổi visual
-            float size = 0.6f + expandSize;
-            player.width = size;
-            player.height = 1.8f + expandSize;
-            
-            // Re-calculate the actual AABB object
-            player.setEntityBoundingBox(new net.minecraft.util.AxisAlignedBB(
-                player.posX - size / 2.0F, player.posY, player.posZ - size / 2.0F,
-                player.posX + size / 2.0F, player.posY + player.height, player.posZ + size / 2.0F
-            ));
+        if (mc.theWorld == null || mc.thePlayer == null) return;
+        // Copy list to avoid ConcurrentModificationException from Netty thread
+        EntityPlayer[] snapshot = mc.theWorld.playerEntities.toArray(new EntityPlayer[0]);
+        for (EntityPlayer p : snapshot) {
+            if (p == null || p == mc.thePlayer || p.isDead) continue;
+            if (p.getEntityBoundingBox() == null) continue;
+            expand(p, expand);
         }
     }
 
     @Override
     public void onDisable() {
         if (mc.theWorld == null) return;
-        
-        // Trả lại kích thước chuẩn khi tắt mod
-        for (EntityPlayer player : mc.theWorld.playerEntities) {
-            player.width = 0.6f;
-            player.height = 1.8f;
+        EntityPlayer[] snapshot = mc.theWorld.playerEntities.toArray(new EntityPlayer[0]);
+        for (EntityPlayer p : snapshot) {
+            if (p == null || p == mc.thePlayer) continue;
+            if (p.getEntityBoundingBox() == null) continue;
+            expand(p, 0.0f);
         }
+    }
+
+    private void expand(EntityPlayer p, float extra) {
+        try {
+            float w = 0.6f + extra;
+            float h = 1.8f + extra;
+            p.width  = w;
+            p.height = h;
+            p.setEntityBoundingBox(new AxisAlignedBB(
+                p.posX - w / 2f, p.posY,     p.posZ - w / 2f,
+                p.posX + w / 2f, p.posY + h, p.posZ + w / 2f
+            ));
+        } catch (Exception ignored) {}
     }
 }

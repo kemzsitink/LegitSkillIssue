@@ -1,45 +1,28 @@
 package com.example.ablabla.module.impl;
 
 import com.example.ablabla.module.Module;
+import com.example.ablabla.utils.ReflectionUtil;
 import net.minecraft.client.Minecraft;
+
 import java.lang.reflect.Field;
 
 public class FastPlaceMod extends Module {
-    private Field delayTimerField;
+
+    private static final Field DELAY_TIMER = ReflectionUtil.findField(
+            Minecraft.class, "rightClickDelayTimer", "field_71467_ac");
 
     public FastPlaceMod() {
         super("FastPlace");
-        try {
-            // Dev workspace name
-            delayTimerField = Minecraft.class.getDeclaredField("rightClickDelayTimer");
-        } catch (Exception e) {
-            try {
-                // Obfuscated SRG name for 1.8.9
-                delayTimerField = Minecraft.class.getDeclaredField("field_71467_ac");
-            } catch (Exception ex) {
-                System.out.println("[Ablabla-Logger] FastPlace: Failed to find rightClickDelayTimer field.");
-            }
-        }
-        if (delayTimerField != null) {
-            delayTimerField.setAccessible(true);
-        }
     }
 
     @Override
     public void onTick() {
-        if (mc.thePlayer == null || delayTimerField == null) return;
-        try {
-            // Set delay to 0 to place instantly when right clicking
-            delayTimerField.set(mc, 0);
-        } catch (Exception e) {}
+        if (mc.thePlayer == null) return;
+        ReflectionUtil.setInt(DELAY_TIMER, mc, 0);
     }
 
     @Override
     public void onDisable() {
-        if (delayTimerField == null) return;
-        try {
-            // Reset to default Minecraft right click delay (4 ticks)
-            delayTimerField.set(mc, 4);
-        } catch (Exception e) {}
+        ReflectionUtil.setInt(DELAY_TIMER, mc, 4);
     }
 }

@@ -7,24 +7,24 @@ import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
 
 public class NoSlowMod extends Module {
+
     public NoSlowMod() {
         super("NoSlow");
     }
 
     @Override
     public void onTick() {
-        // Only run when moving and using an item
-        if (mc.thePlayer.isUsingItem() && (mc.thePlayer.movementInput.moveForward != 0 || mc.thePlayer.movementInput.moveStrafe != 0)) {
-            // Restore speed client-side mathematically
-            mc.thePlayer.movementInput.moveForward *= 5.0f; 
-            mc.thePlayer.movementInput.moveStrafe *= 5.0f;
-            
-            // Server-side bypass: Send release before movement, then placement after movement.
-            // This exploits server's item-use desync mechanism.
-            // Avoid spamming the console 20 times a second, log only once in a while or use a basic debug print.
-            // System.out.println("[Ablabla-Logger] [NoSlow] Sending item desync packets (C07 -> C08)");
-            mc.getNetHandler().addToSendQueue(new C07PacketPlayerDigging(C07PacketPlayerDigging.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN));
-            mc.getNetHandler().addToSendQueue(new C08PacketPlayerBlockPlacement(mc.thePlayer.inventory.getCurrentItem()));
-        }
+        if (mc.thePlayer == null || mc.getNetHandler() == null) return;
+        if (!mc.thePlayer.isUsingItem()) return;
+
+        boolean moving = mc.thePlayer.movementInput.moveForward != 0
+                      || mc.thePlayer.movementInput.moveStrafe != 0;
+        if (!moving) return;
+
+        // Desync: tell server we released the item so it doesn't apply slow
+        mc.getNetHandler().addToSendQueue(
+            new C07PacketPlayerDigging(C07PacketPlayerDigging.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN));
+        mc.getNetHandler().addToSendQueue(
+            new C08PacketPlayerBlockPlacement(mc.thePlayer.inventory.getCurrentItem()));
     }
 }

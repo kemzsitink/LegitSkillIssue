@@ -32,15 +32,22 @@ public class WTapMod extends Module {
 
     @Override
     public boolean onPacketSend(net.minecraft.network.Packet<?> packet) {
-        if (packet instanceof C02PacketUseEntity) {
-            C02PacketUseEntity attack = (C02PacketUseEntity) packet;
-            if (attack.getAction() == C02PacketUseEntity.Action.ATTACK) {
-                if (mc.thePlayer.isSprinting() && mc.gameSettings.keyBindForward.isKeyDown()) {
+        if (!(packet instanceof C02PacketUseEntity)) return false;
+        C02PacketUseEntity attack = (C02PacketUseEntity) packet;
+        if (attack.getAction() != C02PacketUseEntity.Action.ATTACK) return false;
+
+        // Read player state on main thread only — snapshot what we need
+        // onPacketSend runs on Netty IO thread, so we schedule the state-check back to main
+        mc.addScheduledTask(new Runnable() {
+            public void run() {
+                if (mc.thePlayer != null
+                        && mc.thePlayer.isSprinting()
+                        && mc.gameSettings.keyBindForward.isKeyDown()) {
                     tapping = true;
                     ticks = 0;
                 }
             }
-        }
+        });
         return false;
     }
 }

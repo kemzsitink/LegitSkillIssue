@@ -5,76 +5,88 @@ import net.minecraft.entity.Entity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
-import net.minecraftforge.client.event.MouseEvent;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 import java.util.List;
-import java.util.Random;
 
+/**
+ * Must hook RenderWorldLastEvent — fires AFTER EntityRenderer sets objectMouseOver
+ * each frame. onTick() is too slow (20/s vs 300fps), objectMouseOver gets
+ * overwritten before the click is processed.
+ */
 public class ReachMod extends Module {
-    public static float reachDistance = 3.5f;
-    private final Random random = new Random();
+
+    public float reachDistance = 3.5f;
+    private boolean registered = false;
 
     public ReachMod() {
         super("Reach");
     }
 
     @Override
-    public void onMouseClick(MouseEvent event) {
-        // Chỉ hoạt động khi nhấn chuột trái (nút 0)
-        if (event.button != 0 || !event.buttonstate) return;
+    protected void onEnable() {
+        if (!registered) {
+            MinecraftForge.EVENT_BUS.register(this);
+            registered = true;
+        }
+    }
 
+    @SubscribeEvent
+    public void onRenderWorld(RenderWorldLastEvent event) {
+        if (!isEnabled()) return;
         if (mc.thePlayer == null || mc.theWorld == null) return;
-
-        // Tính toán Reach với một chút sai số Gaussian để "Legit" hơn
-        double reach = reachDistance;
-        double gaussianOffset = Math.abs(random.nextGaussian() * 0.12);
-        if (gaussianOffset > 0.4) gaussianOffset = 0.4; // Giới hạn sai số
-        
-        reach = 3.0 + (reachDistance - 3.0) + (gaussianOffset - 0.1);
-        
-        if (reach < 3.0) reach = 3.0;
-        if (reach > reachDistance) reach = reachDistance;
+        if (mc.currentScreen != null) return;
 
         Entity rve = mc.getRenderViewEntity();
         if (rve == null) return;
 
-        Vec3 eye = rve.getPositionEyes(1.0f);
-        Vec3 look = rve.getLook(1.0f);
-        Vec3 targetVec = eye.addVector(look.xCoord * reach, look.yCoord * reach, look.zCoord * reach);
+        float pt = event.partialTicks;
 
-        // Kiểm tra xem có block nào chắn giữa không
-        MovingObjectPosition block = mc.theWorld.rayTraceBlocks(eye, targetVec, false, false, true);
-        if (block != null) {
-            targetVec = block.hitVec;
-            reach = eye.distanceTo(targetVec);
+        Vec3 eye  = rve.getPositionEyes(pt);
+        Vec3 look = rve.getLook(pt);
+        Vec3 end  = eye.addVector(look.xCoord * reachDistance,
+                                  look.yCoord * reachDistance,
+                                  look.zCoord * reachDistance);
+
+        // Respect blocks in the way
+        MovingObjectPosition blockHit = mc.theWorld.rayTraceBlocks(eye, end, false, false, true);
+        double maxReach = reachDistance;
+        if (blockHit != null) {
+            maxReach = eye.distanceTo(blockHit.hitVec);
+            end = blockHit.hitVec;
         }
 
-        Entity target = null;
-        double bestDist = reach;
-        Vec3 hitVec = null;
-        
-        // Quét các thực thể trong tầm Reach
-        List<Entity> list = mc.theWorld.getEntitiesWithinAABBExcludingEntity(rve, 
-            rve.getEntityBoundingBox().addCoord(look.xCoord * reach, look.yCoord * reach, look.zCoord * reach).expand(1.0, 1.0, 1.0));
+        // Only bother if our reach is actually beyond vanilla (3.0)
+        if (maxReach <= 3.0) return;
+
+        @SuppressWarnings("unchecked")
+        List<Entity> list = mc.theWorld.getEntitiesWithinAABBExcludingEntity(rve,
+            rve.getEntityBoundingBox()
+               .addCoord(look.xCoord * maxReach, look.yCoord * maxReach, look.zCoord * maxReach)
+               .expand(1.0, 1.0, 1.0));
+
+        Entity hit    = null;
+        double best   = maxReach;
+        Vec3   hitVec = null;
 
         for (Entity e : list) {
             if (!e.canBeCollidedWith()) continue;
-            
             float s = e.getCollisionBorderSize();
             AxisAlignedBB bb = e.getEntityBoundingBox().expand(s, s, s);
-            MovingObjectPosition mop = bb.calculateIntercept(eye, targetVec);
-            
+            MovingObjectPosition mop = bb.calculateIntercept(eye, end);
+
             if (bb.isVecInside(eye)) {
-                if (bestDist >= 0.0) { target = e; bestDist = 0.0; hitVec = eye; }
+                if (best >= 0.0) { hit = e; best = 0.0; hitVec = eye; }
             } else if (mop != null) {
                 double d = eye.distanceTo(mop.hitVec);
-                if (d < bestDist || bestDist == 0.0) { target = e; bestDist = d; hitVec = mop.hitVec; }
+                if (d < best) { hit = e; best = d; hitVec = mop.hitVec; }
             }
         }
 
-        // Nếu tìm thấy mục tiêu ở xa hơn 3 blocks, ép Minecraft nhắm vào nó
-        if (target != null && bestDist <= reach) {
-            mc.objectMouseOver = new MovingObjectPosition(target, hitVec);
+        if (hit != null) {
+            mc.objectMouseOver = new MovingObjectPosition(hit, hitVec);
         }
     }
 }

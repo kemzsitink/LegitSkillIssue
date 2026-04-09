@@ -1,48 +1,39 @@
 package com.example.ablabla.module.impl;
 
 import com.example.ablabla.module.Module;
+import com.example.ablabla.utils.ReflectionUtil;
 import net.minecraft.client.Minecraft;
+import net.minecraft.item.ItemAxe;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
 import net.minecraft.network.play.client.C02PacketUseEntity;
+
 import java.lang.reflect.Method;
 
 public class BlockHitMod extends Module {
-    private Method rightClickMethod;
+
+    private static final Method RIGHT_CLICK = ReflectionUtil.findMethod(
+            Minecraft.class, "rightClickMouse", "func_147121_ag");
 
     public BlockHitMod() {
         super("BlockHit");
-        try {
-            // "rightClickMouse" in dev environment
-            rightClickMethod = Minecraft.class.getDeclaredMethod("rightClickMouse");
-        } catch (Exception e) {
-            try {
-                // "func_147121_ag" is the SRG name for rightClickMouse in 1.8.9
-                rightClickMethod = Minecraft.class.getDeclaredMethod("func_147121_ag");
-            } catch (Exception ex) {}
-        }
-        if (rightClickMethod != null) {
-            rightClickMethod.setAccessible(true);
-        }
     }
 
     @Override
     public boolean onPacketSend(net.minecraft.network.Packet<?> packet) {
-        if (packet instanceof C02PacketUseEntity && rightClickMethod != null) {
-            C02PacketUseEntity useEntity = (C02PacketUseEntity) packet;
-            
-            // Nếu là gói tin tấn công (ATTACK)
-            if (useEntity.getAction() == C02PacketUseEntity.Action.ATTACK) {
-                ItemStack stack = mc.thePlayer.getCurrentEquippedItem();
-                
-                // Nếu đang cầm kiếm
-                if (stack != null && stack.getItem() instanceof ItemSword) {
-                    try {
-                        // Tự động kích hoạt chuột phải ngay sau khi chém
-                        rightClickMethod.invoke(mc);
-                    } catch (Exception e) {}
+        if (!(packet instanceof C02PacketUseEntity) || RIGHT_CLICK == null) return false;
+
+        C02PacketUseEntity use = (C02PacketUseEntity) packet;
+        if (use.getAction() != C02PacketUseEntity.Action.ATTACK) return false;
+
+        ItemStack stack = mc.thePlayer.getCurrentEquippedItem();
+        if (stack != null && (stack.getItem() instanceof ItemSword || stack.getItem() instanceof ItemAxe)) {
+            // Schedule on main thread — rightClickMouse() is NOT thread-safe
+            mc.addScheduledTask(new Runnable() {
+                public void run() {
+                    ReflectionUtil.invoke(RIGHT_CLICK, mc);
                 }
-            }
+            });
         }
         return false;
     }
