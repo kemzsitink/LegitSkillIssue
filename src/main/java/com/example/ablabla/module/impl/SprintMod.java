@@ -12,7 +12,7 @@ public class SprintMod extends Module {
     public void onTick() {
         if (mc.thePlayer == null) return;
         
-        // Tự động nhấn phím chạy (Sprint) nếu đang di chuyển về phía trước, không bị đói và không đụng tường
+        // Auto-sprint: moving forward, not sneaking, not colliding horizontally
         if (mc.thePlayer.movementInput.moveForward > 0 && !mc.thePlayer.isSneaking() && !mc.thePlayer.isCollidedHorizontally) {
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindSprint.getKeyCode(), true);
         }

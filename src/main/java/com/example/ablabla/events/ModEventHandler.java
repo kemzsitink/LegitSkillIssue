@@ -19,8 +19,8 @@ public class ModEventHandler {
 
         int key = Keyboard.getEventKey();
 
-        // Open GUI with R key
-        if (key == Keyboard.KEY_R && Minecraft.getMinecraft().currentScreen == null) {
+        // Open GUI with Right Shift
+        if (key == Keyboard.KEY_RSHIFT && Minecraft.getMinecraft().currentScreen == null) {
             Minecraft.getMinecraft().displayGuiScreen(new ReachMenu());
             return;
         }
@@ -37,11 +37,13 @@ public class ModEventHandler {
     @SubscribeEvent
     public void onServerConnect(FMLNetworkEvent.ClientConnectedToServerEvent event) {
         PacketHandler.inject();
+        com.example.ablabla.utils.TpsTracker.INSTANCE.reset();
     }
 
     @SubscribeEvent
     public void onServerDisconnect(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
         PacketHandler.remove();
+        com.example.ablabla.utils.TpsTracker.INSTANCE.reset();
     }
 
     @SubscribeEvent

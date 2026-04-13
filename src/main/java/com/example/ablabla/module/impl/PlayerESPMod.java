@@ -50,7 +50,7 @@ public class PlayerESPMod extends Module {
         GlStateManager.disableLighting();
         GL11.glLineWidth(1.5f);
 
-        for (Object obj : mc.theWorld.playerEntities) {
+        for (Object obj : mc.theWorld.playerEntities.toArray()) {
             if (!(obj instanceof EntityPlayer)) continue;
             EntityPlayer p = (EntityPlayer) obj;
             if (p == mc.thePlayer) continue;

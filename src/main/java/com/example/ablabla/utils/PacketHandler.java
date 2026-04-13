@@ -13,6 +13,7 @@ public class PacketHandler extends ChannelDuplexHandler {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         if (msg instanceof Packet) {
+            TpsTracker.INSTANCE.onPacketReceive((Packet<?>) msg);
             if (ModuleManager.INSTANCE.onPacketReceive((Packet<?>) msg)) {
                 System.out.println("[Ablabla-Logger] [IN] Cancelled Packet: " + msg.getClass().getSimpleName());
                 return; // Cancel packet if a module requested it

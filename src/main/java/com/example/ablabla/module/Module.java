@@ -1,7 +1,13 @@
 package com.example.ablabla.module;
 
+import com.example.ablabla.module.setting.ModeSetting;
+import com.example.ablabla.module.setting.NumberSetting;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.input.Keyboard;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public abstract class Module {
     protected static final Minecraft mc = Minecraft.getMinecraft();
@@ -9,6 +15,8 @@ public abstract class Module {
     private final String name;
     private boolean enabled;
     private int keybind; // LWJGL key code, Keyboard.KEY_NONE = no bind
+    private final List<NumberSetting> settings = new ArrayList<>();
+    private final List<ModeSetting> modeSettings = new ArrayList<>();
 
     public Module(String name) {
         this(name, Keyboard.KEY_NONE);
@@ -24,6 +32,25 @@ public abstract class Module {
     public boolean isEnabled() { return enabled; }
     public int getKeybind()    { return keybind; }
     public void setKeybind(int key) { this.keybind = key; }
+
+    /** Register a setting — call from subclass constructor. */
+    protected NumberSetting addSetting(NumberSetting s) {
+        settings.add(s);
+        return s;
+    }
+
+    protected ModeSetting addSetting(ModeSetting s) {
+        modeSettings.add(s);
+        return s;
+    }
+
+    public List<NumberSetting> getSettings() {
+        return Collections.unmodifiableList(settings);
+    }
+
+    public List<ModeSetting> getModeSettings() {
+        return Collections.unmodifiableList(modeSettings);
+    }
 
     public String getKeybindName() {
         return keybind == Keyboard.KEY_NONE ? "NONE" : Keyboard.getKeyName(keybind);

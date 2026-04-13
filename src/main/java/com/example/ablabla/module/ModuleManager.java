@@ -16,20 +16,38 @@ public class ModuleManager {
     private final List<Module> modules = new ArrayList<>();
 
     public ModuleManager() {
+        // Combat
         modules.add(new WTapMod());
         modules.add(new VelocityMod());
         modules.add(new NoSlowMod());
         modules.add(new AutoClickerMod());
+        modules.add(new TriggerBotMod());
         modules.add(new FastPlaceMod());
         modules.add(new AimAssistMod());
         modules.add(new EagleMod());
         modules.add(new SprintMod());
+        modules.add(new AirJumpMod());
+        modules.add(new NoFallMod());
         modules.add(new BlockHitMod());
         modules.add(new HitBoxMod());
         modules.add(new BacktrackMod());
+        modules.add(new AutoBlinkMod());
         modules.add(new ReachMod());
+        modules.add(new HitDelayFixMod());
+        modules.add(new KeepSprintMod());
+        modules.add(new FastEatMod());
+        modules.add(new SilentAuraMod());
+        // Render
         modules.add(new PlayerESPMod());
-        modules.add(new KillAuraMod());
+        modules.add(new ChamsMod());
+        modules.add(new FullbrightMod());
+        modules.add(new NoHurtCamMod());
+        // Player
+        modules.add(new InvMoveMod());
+        modules.add(new ChestStealerMod());
+        modules.add(new FlightMod());
+        modules.add(new CreativeModeMod());
+        modules.add(new NetworkStressTester());
     }
 
     public List<Module> getModules() {
