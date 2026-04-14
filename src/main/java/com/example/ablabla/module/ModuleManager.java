@@ -1,7 +1,9 @@
 package com.example.ablabla.module;
 
-import com.example.ablabla.module.impl.*;
-import com.example.ablabla.module.impl.PlayerESPMod;
+import com.example.ablabla.module.impl.combat.*;
+import com.example.ablabla.module.impl.movement.*;
+import com.example.ablabla.module.impl.player.*;
+import com.example.ablabla.module.impl.render.*;
 import net.minecraft.network.Packet;
 import net.minecraftforge.client.event.MouseEvent;
 

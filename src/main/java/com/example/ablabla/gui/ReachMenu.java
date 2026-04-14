@@ -254,7 +254,7 @@ public class ReachMenu extends GuiScreen {
 
     private String getCategory(Module m) {
         if (m.getName().contains("ESP") || m.getName().contains("Fullbright") || m.getName().contains("Chams")) return "Render";
-        if (m.getName().contains("Sprint") || m.getName().contains("NoSlow") || m.getName().contains("Flight")) return "Movement";
+        if (m.getName().contains("Sprint") || m.getName().contains("NoSlow") || m.getName().contains("Flight") || m.getName().contains("Jump")) return "Movement";
         if (m.getName().contains("Stress") || m.getName().contains("Chest") || m.getName().contains("Inv")) return "Player";
         return "Combat";
     }

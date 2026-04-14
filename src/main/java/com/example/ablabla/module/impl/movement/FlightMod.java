@@ -1,4 +1,4 @@
-package com.example.ablabla.module.impl;
+package com.example.ablabla.module.impl.movement;
 
 import com.example.ablabla.module.Module;
 

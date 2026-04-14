@@ -1,4 +1,4 @@
-package com.example.ablabla.module.impl;
+package com.example.ablabla.module.impl.combat;
 
 import com.example.ablabla.module.Module;
 import com.example.ablabla.utils.ReflectionUtil;

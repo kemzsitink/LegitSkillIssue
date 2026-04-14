@@ -1,4 +1,4 @@
-package com.example.ablabla.module.impl;
+package com.example.ablabla.module.impl.render;
 
 import com.example.ablabla.module.Module;
 import net.minecraft.client.Minecraft;
