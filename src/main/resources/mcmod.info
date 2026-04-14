@@ -1,7 +1,7 @@
 [
 {
-  "modid": "ablabla",
-  "name": "Reach Mod",
+  "modid": "legitskillissue",
+  "name": "LegitSkillIssue",
   "description": "A reach mod converted to Forge 1.8.9.",
   "version": "${version}",
   "mcversion": "${mcversion}",
