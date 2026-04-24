@@ -14,7 +14,8 @@
 		"WorldRendererMixin",
 		"LivingEntityMixin",
 		"CameraMixin",
-		"HeldItemRendererMixin"
+		"HeldItemRendererMixin",
+		"MinecraftClientMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
