@@ -1,0 +1,38 @@
+{
+	"schemaVersion": 1,
+	"id": "legitskillissue",
+	"version": "${version}",
+	"name": "Legit Skill Issue",
+	"description": "A mod that fixes your skill issues.",
+	"authors": [
+		"kemzsitink <hocctiengchokeu@gmail.com>"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/Example/legitskillissue"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/legitskillissue/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.LegitSkillIssue.LegitSkillIssueMod"
+		],
+		"client": [
+			"com.LegitSkillIssue.client.LegitSkillIssueClient"
+		]
+	},
+	"mixins": [
+		"legitskillissue.mixins.json",
+		{
+			"config": "legitskillissue.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.19.2",
+		"minecraft": "~1.21.4",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}

@@ -1,0 +1,14 @@
+{
+	"required": true,
+	"package": "com.LegitSkillIssue.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"mixins": [
+		"LegitSkillIssueMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	},
+	"overwrites": {
+		"requireAnnotations": true
+	}
+}
