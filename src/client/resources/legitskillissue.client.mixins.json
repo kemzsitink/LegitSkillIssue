@@ -8,7 +8,13 @@
 		"EntityMixin",
 		"ClientPlayerEntityMixin",
 		"RenderTickCounterMixin",
-		"ClientConnectionMixin"
+		"ClientConnectionMixin",
+		"EntityRendererMixin",
+		"InGameHudMixin",
+		"WorldRendererMixin",
+		"LivingEntityMixin",
+		"CameraMixin",
+		"HeldItemRendererMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
