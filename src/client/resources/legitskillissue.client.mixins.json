@@ -6,7 +6,8 @@
 		"LegitSkillIssueClientMixin",
 		"ClientPlayNetworkHandlerMixin",
 		"EntityMixin",
-		"ClientPlayerEntityMixin"
+		"ClientPlayerEntityMixin",
+		"RenderTickCounterMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
