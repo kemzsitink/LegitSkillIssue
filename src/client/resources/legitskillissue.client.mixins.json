@@ -3,7 +3,8 @@
 	"package": "com.LegitSkillIssue.client.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"client": [
-		"LegitSkillIssueClientMixin"
+		"LegitSkillIssueClientMixin",
+		"ClientPlayNetworkHandlerMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

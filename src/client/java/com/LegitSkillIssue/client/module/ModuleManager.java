@@ -2,154 +2,22 @@ package com.LegitSkillIssue.client.module;
 
 import java.util.ArrayList;
 import java.util.List;
-import com.LegitSkillIssue.client.module.combat.AuraModule;
-import com.LegitSkillIssue.client.module.combat.AutoClickerModule;
-import com.LegitSkillIssue.client.module.combat.VelocityModule;
-import com.LegitSkillIssue.client.module.combat.ReachModule;
-import com.LegitSkillIssue.client.module.combat.CriticalsModule;
-import com.LegitSkillIssue.client.module.combat.BowAimbotModule;
-import com.LegitSkillIssue.client.module.combat.AutoArmorModule;
-import com.LegitSkillIssue.client.module.combat.AutoPotModule;
-import com.LegitSkillIssue.client.module.combat.TargetStrafeModule;
-import com.LegitSkillIssue.client.module.combat.AntiBotModule;
-import com.LegitSkillIssue.client.module.combat.TickShiftModule;
-import com.LegitSkillIssue.client.module.combat.HitBoxModule;
-import com.LegitSkillIssue.client.module.combat.TPAuraModule;
-import com.LegitSkillIssue.client.module.combat.IgniteModule;
-import com.LegitSkillIssue.client.module.combat.AutoSoupModule;
-import com.LegitSkillIssue.client.module.combat.KillauraModule;
-import com.LegitSkillIssue.client.module.combat.AimAssistModule;
-import com.LegitSkillIssue.client.module.combat.TriggerBotModule;
-import com.LegitSkillIssue.client.module.combat.BackstabModule;
-import com.LegitSkillIssue.client.module.combat.CrystalAuraModule;
-import com.LegitSkillIssue.client.module.combat.AnchorAuraModule;
-import com.LegitSkillIssue.client.module.combat.BedAuraModule;
-import com.LegitSkillIssue.client.module.combat.BlockAuraModule;
-import com.LegitSkillIssue.client.module.movement.SpeedModule;
-import com.LegitSkillIssue.client.module.movement.FlightModule;
-import com.LegitSkillIssue.client.module.movement.StepModule;
-import com.LegitSkillIssue.client.module.movement.SprintModule;
-import com.LegitSkillIssue.client.module.movement.LongJumpModule;
-import com.LegitSkillIssue.client.module.movement.HighJumpModule;
-import com.LegitSkillIssue.client.module.movement.JesusModule;
-import com.LegitSkillIssue.client.module.movement.NoSlowModule;
-import com.LegitSkillIssue.client.module.movement.SpiderModule;
-import com.LegitSkillIssue.client.module.movement.TimerModule;
-import com.LegitSkillIssue.client.module.movement.FastDropModule;
-import com.LegitSkillIssue.client.module.movement.PhaseModule;
-import com.LegitSkillIssue.client.module.movement.BlinkModule;
-import com.LegitSkillIssue.client.module.movement.SafeWalkModule;
-import com.LegitSkillIssue.client.module.movement.AutoWalkModule;
-import com.LegitSkillIssue.client.module.movement.ElytraFlyModule;
-import com.LegitSkillIssue.client.module.movement.IceSpeedModule;
-import com.LegitSkillIssue.client.module.movement.WaterSpeedModule;
-import com.LegitSkillIssue.client.module.movement.FastClimbModule;
-import com.LegitSkillIssue.client.module.movement.GlideModule;
-import com.LegitSkillIssue.client.module.movement.LevitationModule;
-import com.LegitSkillIssue.client.module.movement.AntiFallModule;
-import com.LegitSkillIssue.client.module.movement.SlimeJumpModule;
-import com.LegitSkillIssue.client.module.render.ESPModule;
-import com.LegitSkillIssue.client.module.render.TracersModule;
-import com.LegitSkillIssue.client.module.render.ChamsModule;
-import com.LegitSkillIssue.client.module.render.FullbrightModule;
-import com.LegitSkillIssue.client.module.render.NameTagsModule;
-import com.LegitSkillIssue.client.module.render.HUDModule;
-import com.LegitSkillIssue.client.module.render.ClickGUIModule;
-import com.LegitSkillIssue.client.module.render.BlockOutlineModule;
-import com.LegitSkillIssue.client.module.render.AnimationsModule;
-import com.LegitSkillIssue.client.module.render.TargetHUDModule;
-import com.LegitSkillIssue.client.module.render.ItemESPModule;
-import com.LegitSkillIssue.client.module.render.WaypointsModule;
-import com.LegitSkillIssue.client.module.render.FreecamModule;
-import com.LegitSkillIssue.client.module.render.XRayModule;
-import com.LegitSkillIssue.client.module.render.NoRenderModule;
-import com.LegitSkillIssue.client.module.render.CameraClipModule;
-import com.LegitSkillIssue.client.module.render.ViewModelModule;
-import com.LegitSkillIssue.client.module.render.CrosshairModule;
-import com.LegitSkillIssue.client.module.render.RadarModule;
-import com.LegitSkillIssue.client.module.render.BreadcrumbsModule;
-import com.LegitSkillIssue.client.module.render.HealthESPModule;
-import com.LegitSkillIssue.client.module.render.HoleESPModule;
-import com.LegitSkillIssue.client.module.render.LogoutSpotsModule;
-import com.LegitSkillIssue.client.module.player.AutoToolModule;
-import com.LegitSkillIssue.client.module.player.FastPlaceModule;
-import com.LegitSkillIssue.client.module.player.FastBreakModule;
-import com.LegitSkillIssue.client.module.player.NoFallModule;
-import com.LegitSkillIssue.client.module.player.ScaffoldModule;
-import com.LegitSkillIssue.client.module.player.ChestStealerModule;
-import com.LegitSkillIssue.client.module.player.InvManagerModule;
-import com.LegitSkillIssue.client.module.player.AutoRespawnModule;
-import com.LegitSkillIssue.client.module.player.AntiCactusModule;
-import com.LegitSkillIssue.client.module.player.DerpModule;
-import com.LegitSkillIssue.client.module.player.AutoFishModule;
-import com.LegitSkillIssue.client.module.player.GhostHandModule;
-import com.LegitSkillIssue.client.module.player.AutoEatModule;
-import com.LegitSkillIssue.client.module.player.AutoMineModule;
-import com.LegitSkillIssue.client.module.player.AntiHungerModule;
-import com.LegitSkillIssue.client.module.player.AntiFireModule;
-import com.LegitSkillIssue.client.module.player.AutoHealModule;
-import com.LegitSkillIssue.client.module.player.FastUseModule;
-import com.LegitSkillIssue.client.module.player.XPSpammerModule;
-import com.LegitSkillIssue.client.module.player.AutoGappleModule;
-import com.LegitSkillIssue.client.module.world.NukerModule;
-import com.LegitSkillIssue.client.module.world.WeatherModule;
-import com.LegitSkillIssue.client.module.world.TimeModule;
-import com.LegitSkillIssue.client.module.world.ScammerModule;
-import com.LegitSkillIssue.client.module.world.PingSpoofModule;
-import com.LegitSkillIssue.client.module.world.AntiVoidModule;
-import com.LegitSkillIssue.client.module.world.SpammerModule;
-import com.LegitSkillIssue.client.module.world.FuckerModule;
-import com.LegitSkillIssue.client.module.world.BreakerModule;
-import com.LegitSkillIssue.client.module.world.PlanterModule;
-import com.LegitSkillIssue.client.module.world.SignCrashModule;
-import com.LegitSkillIssue.client.module.world.BookCrashModule;
-import com.LegitSkillIssue.client.module.world.ChunkLoaderModule;
-import com.LegitSkillIssue.client.module.world.BlockESPModule;
-import com.LegitSkillIssue.client.module.world.SearchModule;
-import com.LegitSkillIssue.client.module.world.CaveFinderModule;
-import com.LegitSkillIssue.client.module.world.BaseFinderModule;
-import com.LegitSkillIssue.client.module.world.StashFinderModule;
-import com.LegitSkillIssue.client.module.exploit.DisablerModule;
-import com.LegitSkillIssue.client.module.exploit.CrasherModule;
-import com.LegitSkillIssue.client.module.exploit.AntiKickModule;
-import com.LegitSkillIssue.client.module.exploit.PacketLoggerModule;
-import com.LegitSkillIssue.client.module.exploit.BedrockESPModule;
-import com.LegitSkillIssue.client.module.exploit.DupeModule;
-import com.LegitSkillIssue.client.module.exploit.ServerCrasherModule;
-import com.LegitSkillIssue.client.module.exploit.ConsoleSpammerModule;
-import com.LegitSkillIssue.client.module.exploit.PluginLoggerModule;
-import com.LegitSkillIssue.client.module.exploit.ForceOPModule;
-import com.LegitSkillIssue.client.module.exploit.BypassModule;
-import com.LegitSkillIssue.client.module.exploit.AntiBanModule;
-import com.LegitSkillIssue.client.module.exploit.UUIDSpoofModule;
-import com.LegitSkillIssue.client.module.exploit.IPLeaksModule;
-import com.LegitSkillIssue.client.module.exploit.LagSwitchModule;
-import com.LegitSkillIssue.client.module.ghost.WTapModule;
-import com.LegitSkillIssue.client.module.ghost.STapModule;
-import com.LegitSkillIssue.client.module.ghost.BlockHitModule;
-import com.LegitSkillIssue.client.module.ghost.LegitAuraModule;
-import com.LegitSkillIssue.client.module.ghost.FakeLagModule;
-import com.LegitSkillIssue.client.module.ghost.DelayModifierModule;
-import com.LegitSkillIssue.client.module.ghost.EagleModule;
-import com.LegitSkillIssue.client.module.misc.MiddleClickFriendModule;
-import com.LegitSkillIssue.client.module.misc.DiscordRPCModule;
-import com.LegitSkillIssue.client.module.misc.AnnouncerModule;
-import com.LegitSkillIssue.client.module.misc.ChatBypassModule;
-import com.LegitSkillIssue.client.module.misc.AntiSpamModule;
-import com.LegitSkillIssue.client.module.misc.ChatFilterModule;
-import com.LegitSkillIssue.client.module.misc.AutoTPAModule;
-import com.LegitSkillIssue.client.module.misc.AutoLogModule;
-import com.LegitSkillIssue.client.module.misc.FakeHackerModule;
-import com.LegitSkillIssue.client.module.misc.PanicModule;
-import com.LegitSkillIssue.client.module.misc.SelfDestructModule;
-import com.LegitSkillIssue.client.module.misc.MusicPlayerModule;
-import com.LegitSkillIssue.client.module.misc.NoteBotModule;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import com.LegitSkillIssue.client.module.combat.*;
+import com.LegitSkillIssue.client.module.movement.*;
+import com.LegitSkillIssue.client.module.render.*;
+import com.LegitSkillIssue.client.module.player.*;
+import com.LegitSkillIssue.client.module.world.*;
+import com.LegitSkillIssue.client.module.exploit.*;
+import com.LegitSkillIssue.client.module.ghost.*;
+import com.LegitSkillIssue.client.module.misc.*;
 
 public class ModuleManager {
     public static final ModuleManager INSTANCE = new ModuleManager();
     private List<Module> modules = new ArrayList<>();
     
     public void init() {
+        // Combat
         modules.add(new AuraModule());
         modules.add(new AutoClickerModule());
         modules.add(new VelocityModule());
@@ -173,6 +41,8 @@ public class ModuleManager {
         modules.add(new AnchorAuraModule());
         modules.add(new BedAuraModule());
         modules.add(new BlockAuraModule());
+
+        // Movement
         modules.add(new SpeedModule());
         modules.add(new FlightModule());
         modules.add(new StepModule());
@@ -196,6 +66,8 @@ public class ModuleManager {
         modules.add(new LevitationModule());
         modules.add(new AntiFallModule());
         modules.add(new SlimeJumpModule());
+
+        // Render
         modules.add(new ESPModule());
         modules.add(new TracersModule());
         modules.add(new ChamsModule());
@@ -219,6 +91,8 @@ public class ModuleManager {
         modules.add(new HealthESPModule());
         modules.add(new HoleESPModule());
         modules.add(new LogoutSpotsModule());
+
+        // Player
         modules.add(new AutoToolModule());
         modules.add(new FastPlaceModule());
         modules.add(new FastBreakModule());
@@ -239,6 +113,8 @@ public class ModuleManager {
         modules.add(new FastUseModule());
         modules.add(new XPSpammerModule());
         modules.add(new AutoGappleModule());
+
+        // World
         modules.add(new NukerModule());
         modules.add(new WeatherModule());
         modules.add(new TimeModule());
@@ -257,6 +133,8 @@ public class ModuleManager {
         modules.add(new CaveFinderModule());
         modules.add(new BaseFinderModule());
         modules.add(new StashFinderModule());
+
+        // Exploit
         modules.add(new DisablerModule());
         modules.add(new CrasherModule());
         modules.add(new AntiKickModule());
@@ -272,6 +150,8 @@ public class ModuleManager {
         modules.add(new UUIDSpoofModule());
         modules.add(new IPLeaksModule());
         modules.add(new LagSwitchModule());
+
+        // Ghost
         modules.add(new WTapModule());
         modules.add(new STapModule());
         modules.add(new BlockHitModule());
@@ -279,6 +159,8 @@ public class ModuleManager {
         modules.add(new FakeLagModule());
         modules.add(new DelayModifierModule());
         modules.add(new EagleModule());
+
+        // Misc
         modules.add(new MiddleClickFriendModule());
         modules.add(new DiscordRPCModule());
         modules.add(new AnnouncerModule());
@@ -292,6 +174,17 @@ public class ModuleManager {
         modules.add(new SelfDestructModule());
         modules.add(new MusicPlayerModule());
         modules.add(new NoteBotModule());
+
+        // Register Tick Event
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            if (client.player != null) {
+                for (Module m : modules) {
+                    if (m.isEnabled()) {
+                        m.onTick();
+                    }
+                }
+            }
+        });
     }
     
     public List<Module> getModules() { return modules; }
