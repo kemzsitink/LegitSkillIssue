@@ -5,7 +5,8 @@
 	"client": [
 		"LegitSkillIssueClientMixin",
 		"ClientPlayNetworkHandlerMixin",
-		"EntityMixin"
+		"EntityMixin",
+		"ClientPlayerEntityMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
