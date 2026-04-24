@@ -7,18 +7,18 @@ version = project.mod_version
 group = project.maven_group
 
 repositories {
+	maven { url = "https://repo.essential.gg/repository/maven-public" }
 }
 
 loom {
 	splitEnvironmentSourceSets()
 
 	mods {
-		"modid" {
+		"legitskillissue" {
 			sourceSet sourceSets.main
 			sourceSet sourceSets.client
 		}
 	}
-
 }
 
 dependencies {
@@ -27,6 +27,15 @@ dependencies {
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+
+	// Elementa & UniversalCraft
+	implementation "gg.essential:elementa:${project.elementa_version}"
+	include "gg.essential:elementa:${project.elementa_version}"
+
+	modImplementation "gg.essential:universalcraft-1.21.4-fabric:${project.universalcraft_version}"
+	include "gg.essential:universalcraft-1.21.4-fabric:${project.universalcraft_version}"
+
+	modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
 }
 
 processResources {
@@ -48,10 +57,8 @@ java {
 }
 
 jar {
-	inputs.property "projectName", project.name
-
 	from("LICENSE") {
-		rename { "${it}_${project.name}"}
+		rename { "LICENSE_${project.name}" }
 	}
 }
 
