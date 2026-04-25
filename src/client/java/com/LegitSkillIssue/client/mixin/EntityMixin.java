@@ -13,8 +13,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Entity.class)
 public abstract class EntityMixin {
-    @Inject(method = "getTargetingBoundingBox", at = @At("RETURN"), cancellable = true)
-    private void onGetTargetingBoundingBox(CallbackInfoReturnable<Box> cir) {
+    @Inject(method = "getBoundingBox", at = @At("RETURN"), cancellable = true)
+    private void onGetBoundingBox(CallbackInfoReturnable<Box> cir) {
         HitBoxModule hitBox = (HitBoxModule) ModuleManager.INSTANCE.getModules().stream()
                 .filter(m -> m instanceof HitBoxModule)
                 .findFirst().orElse(null);
@@ -32,7 +32,6 @@ public abstract class EntityMixin {
                 .findFirst().orElse(null);
 
         if (antiFire != null && antiFire.isEnabled() && (Entity)(Object)this == net.minecraft.client.MinecraftClient.getInstance().player) {
-            // Basic fire check
             if (source.getName().contains("fire") || source.getName().contains("lava") || source.getName().contains("onFire")) {
                 cir.setReturnValue(false);
             }

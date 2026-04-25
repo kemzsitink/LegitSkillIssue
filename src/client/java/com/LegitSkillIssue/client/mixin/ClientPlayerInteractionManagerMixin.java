@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ClientPlayerInteractionManager.class)
 public class ClientPlayerInteractionManagerMixin {
-    @Shadow private float blockBreakProgress;
+    @Shadow private float currentBreakingProgress;
 
     @Inject(method = "updateBlockBreakingProgress", at = @At("HEAD"))
     private void onUpdateBlockBreakingProgress(net.minecraft.util.math.BlockPos pos, net.minecraft.util.math.Direction direction, CallbackInfoReturnable<Boolean> cir) {
@@ -20,8 +20,7 @@ public class ClientPlayerInteractionManagerMixin {
                 .findFirst().orElse(null);
 
         if (fastBreak != null && fastBreak.isEnabled()) {
-            if (blockBreakProgress >= 1.0f) return;
-            // Additional progress logic would go here
+            if (currentBreakingProgress >= 1.0f) return;
         }
     }
 }

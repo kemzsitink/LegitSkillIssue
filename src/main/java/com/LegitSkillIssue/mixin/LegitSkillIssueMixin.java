@@ -8,8 +8,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(MinecraftServer.class)
 public class LegitSkillIssueMixin {
-	@Inject(at = @At("HEAD"), method = "loadLevel")
+	@Inject(at = @At("HEAD"), method = "setupServer")
 	private void init(CallbackInfo info) {
-		// This code is injected into the start of MinecraftServer.loadLevel()V
+		// This code is injected into the start of MinecraftServer.setupServer()
 	}
 }
