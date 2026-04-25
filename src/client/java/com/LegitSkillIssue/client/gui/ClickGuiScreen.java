@@ -3,28 +3,28 @@ package com.LegitSkillIssue.client.gui;
 import com.LegitSkillIssue.client.module.Category;
 import com.LegitSkillIssue.client.gui.components.CategoryPanel;
 import gg.essential.elementa.WindowScreen;
-import gg.essential.elementa.constraints.PixelConstraint;
+import gg.essential.elementa.components.UIContainer;
+import gg.essential.elementa.constraints.*;
+import java.awt.Color;
 
 public class ClickGuiScreen extends WindowScreen {
     public ClickGuiScreen() {
         super(true, true, true, 0);
 
-        int x = 20;
-        int y = 20;
-        int gap = 110;
+        // Khối chứa (Flex Row) tự động căn giữa màn hình và xếp các Category nằm ngang
+        UIContainer flexRow = new UIContainer();
+        flexRow.setX(new CenterConstraint());
+        flexRow.setY(new CenterConstraint());
+        flexRow.setWidth(new ChildBasedSizeConstraint());
+        flexRow.setHeight(new ChildBasedSizeConstraint());
+        getWindow().addChild(flexRow);
 
         for (Category category : Category.values()) {
             CategoryPanel panel = new CategoryPanel(category);
-            panel.setX(new PixelConstraint((float) x));
-            panel.setY(new PixelConstraint((float) y));
-            
-            getWindow().addChild(panel);
-            x += gap;
-            
-            if (x > 500) {
-                x = 20;
-                y += 200;
-            }
+            // SiblingConstraint: Tự động xếp cạnh Component trước đó với khoảng cách 10px (như gap trong flexbox)
+            panel.setX(new SiblingConstraint(10.0f));
+            panel.setY(new PixelConstraint(0f));
+            flexRow.addChild(panel);
         }
     }
 }

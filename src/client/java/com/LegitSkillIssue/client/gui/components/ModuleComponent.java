@@ -13,28 +13,29 @@ import java.awt.Color;
 
 public class ModuleComponent extends UIBlock {
     private final Module module;
-    private final Color idleColor = new Color(35, 36, 40);
-    private final Color hoverColor = new Color(45, 46, 50);
-    private final Color activeColor = new Color(114, 137, 218);
+    private final Color idleColor = new Color(30, 30, 30, 150); // Đen mờ tinh tế
+    private final Color hoverColor = new Color(50, 50, 50, 200); // Xám mờ khi di chuột
+    private final Color activeColor = new Color(114, 137, 218, 255); // Màu chính Discord blurple
 
     public ModuleComponent(Module module) {
         this.module = module;
         
         this.setWidth(new RelativeConstraint(1.0f));
-        this.setHeight(new PixelConstraint(25.0f));
-        this.setColor(idleColor);
+        this.setHeight(new PixelConstraint(16.0f)); // Rất nhỏ gọn
+        this.setColor(module.isEnabled() ? activeColor : idleColor);
 
         final UIText text = new UIText(module.getName());
-        text.setX(new PixelConstraint(10.0f));
+        text.setX(new PixelConstraint(5.0f)); // Căn lề trái 5px
         text.setY(new CenterConstraint());
-        text.setColor(module.isEnabled() ? activeColor : Color.WHITE);
+        text.setTextScale(new PixelConstraint(0.8f)); // Text siêu mỏng
+        text.setColor(Color.WHITE);
         this.addChild(text);
 
         // Java-safe Kotlin functional interfaces
         this.onMouseEnter(new Function1<Object, Unit>() {
             @Override
             public Unit invoke(Object event) {
-                setColor(hoverColor);
+                if (!module.isEnabled()) setColor(hoverColor);
                 return Unit.INSTANCE;
             }
         });
@@ -42,7 +43,7 @@ public class ModuleComponent extends UIBlock {
         this.onMouseLeave(new Function1<Object, Unit>() {
             @Override
             public Unit invoke(Object event) {
-                setColor(idleColor);
+                setColor(module.isEnabled() ? activeColor : idleColor);
                 return Unit.INSTANCE;
             }
         });
@@ -51,7 +52,7 @@ public class ModuleComponent extends UIBlock {
             @Override
             public Unit invoke(UIComponent comp, UIClickEvent event) {
                 module.toggle();
-                text.setColor(module.isEnabled() ? activeColor : Color.WHITE);
+                setColor(module.isEnabled() ? activeColor : hoverColor);
                 return Unit.INSTANCE;
             }
         });
