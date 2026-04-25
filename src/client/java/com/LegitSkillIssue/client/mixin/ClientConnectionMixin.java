@@ -30,6 +30,16 @@ public class ClientConnectionMixin {
 
     @Inject(method = "send(Lnet/minecraft/network/packet/Packet;)V", at = @At("HEAD"), cancellable = true)
     private void onSendPacket(Packet<?> packet, CallbackInfo ci) {
+        NoFallModule noFall = (NoFallModule) ModuleManager.INSTANCE.getModules().stream()
+                .filter(m -> m instanceof NoFallModule)
+                .findFirst().orElse(null);
+
+        if (noFall != null && noFall.isEnabled()) {
+            if (packet instanceof PlayerMoveC2SPacket movePacket) {
+                ((PlayerMoveC2SPacketAccessor) movePacket).setOnGround(true);
+            }
+        }
+
         LagSwitchModule lagSwitch = (LagSwitchModule) ModuleManager.INSTANCE.getModules().stream()
                 .filter(m -> m instanceof LagSwitchModule)
                 .findFirst().orElse(null);
@@ -38,21 +48,19 @@ public class ClientConnectionMixin {
             deferredPackets.add(packet);
             ci.cancel();
             return;
-        } else if (!deferredPackets.isEmpty()) {
-            // This is complex because send() would recurse. 
-            // We just clear it in this stub or use a different internal method.
-            deferredPackets.clear();
         }
 
-        // Rest of the logic (PacketLogger, Blink, etc.)
-        PacketLoggerModule logger = (PacketLoggerModule) ModuleManager.INSTANCE.getModules().stream()
-                .filter(m -> m instanceof PacketLoggerModule)
+        IPLeaksModule ipLeaks = (IPLeaksModule) ModuleManager.INSTANCE.getModules().stream()
+                .filter(m -> m instanceof IPLeaksModule)
                 .findFirst().orElse(null);
 
-        if (logger != null && logger.isEnabled()) {
-            System.out.println("[PacketLogger] Sending: " + packet.getClass().getSimpleName());
+        if (ipLeaks != null && ipLeaks.isEnabled()) {
+            if (packet instanceof QueryBlockNbtC2SPacket) {
+                ci.cancel();
+                return;
+            }
         }
         
-        // ... Blink logic ...
+        // ... Blink & other logic ...
     }
 }

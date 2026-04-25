@@ -18,7 +18,9 @@
 		"MinecraftClientMixin",
 		"ClientPlayerInteractionManagerMixin",
 		"CactusBlockMixin",
-		"LivingEntityRendererMixin"
+		"LivingEntityRendererMixin",
+		"PlayerEntityMixin",
+		"PlayerMoveC2SPacketAccessor"
 	],
 	"injectors": {
 		"defaultRequire": 1
