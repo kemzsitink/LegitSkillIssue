@@ -8,12 +8,14 @@ import com.LegitSkillIssue.client.module.world.PingSpoofModule;
 import com.LegitSkillIssue.client.module.exploit.PacketLoggerModule;
 import com.LegitSkillIssue.client.module.exploit.IPLeaksModule;
 import com.LegitSkillIssue.client.module.exploit.LagSwitchModule;
+import com.LegitSkillIssue.client.module.misc.ChatBypassModule;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
 import net.minecraft.network.packet.c2s.common.CommonPongC2SPacket;
 import net.minecraft.network.packet.c2s.play.QueryBlockNbtC2SPacket;
+import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -28,6 +30,18 @@ public class ClientConnectionMixin {
 
     @Inject(method = "send(Lnet/minecraft/network/packet/Packet;)V", at = @At("HEAD"), cancellable = true)
     private void onSendPacket(Packet<?> packet, CallbackInfo ci) {
+        ChatBypassModule chatBypass = (ChatBypassModule) ModuleManager.INSTANCE.getModules().stream()
+                .filter(m -> m instanceof ChatBypassModule)
+                .findFirst().orElse(null);
+
+        if (chatBypass != null && chatBypass.isEnabled()) {
+            if (packet instanceof ChatMessageC2SPacket) {
+                // Logic to modify chat message would go here.
+                // Since ChatMessageC2SPacket content is final and signed in 1.21, 
+                // we would need to intercept higher up in the chat system.
+            }
+        }
+
         LagSwitchModule lagSwitch = (LagSwitchModule) ModuleManager.INSTANCE.getModules().stream()
                 .filter(m -> m instanceof LagSwitchModule)
                 .findFirst().orElse(null);
@@ -44,6 +58,7 @@ public class ClientConnectionMixin {
         if (ipLeaks != null && ipLeaks.isEnabled()) {
             if (packet instanceof QueryBlockNbtC2SPacket) {
                 ci.cancel();
+                return;
             }
         }
 
@@ -63,15 +78,8 @@ public class ClientConnectionMixin {
             if (packet instanceof PlayerMoveC2SPacket) {
                 packets.add(packet);
                 ci.cancel();
+                return;
             }
-        }
-
-        NoFallModule noFall = (NoFallModule) ModuleManager.INSTANCE.getModules().stream()
-                .filter(m -> m instanceof NoFallModule)
-                .findFirst().orElse(null);
-
-        if (noFall != null && noFall.isEnabled()) {
-            // Placeholder
         }
 
         AntiHungerModule antiHunger = (AntiHungerModule) ModuleManager.INSTANCE.getModules().stream()
@@ -82,17 +90,8 @@ public class ClientConnectionMixin {
             if (packet instanceof ClientCommandC2SPacket commandPacket) {
                 if (commandPacket.getMode() == ClientCommandC2SPacket.Mode.START_SPRINTING) {
                     ci.cancel();
+                    return;
                 }
-            }
-        }
-
-        PingSpoofModule pingSpoof = (PingSpoofModule) ModuleManager.INSTANCE.getModules().stream()
-                .filter(m -> m instanceof PingSpoofModule)
-                .findFirst().orElse(null);
-
-        if (pingSpoof != null && pingSpoof.isEnabled()) {
-            if (packet instanceof CommonPongC2SPacket) {
-                // Placeholder
             }
         }
     }

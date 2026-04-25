@@ -5,6 +5,6 @@ import com.LegitSkillIssue.client.module.Category;
 
 public class CameraClipModule extends Module {
     public CameraClipModule() {
-        super("CameraClip", "CameraClip module for RENDER", Category.RENDER);
+        super("CameraClip", "Allows camera to clip through blocks.", Category.RENDER);
     }
 }

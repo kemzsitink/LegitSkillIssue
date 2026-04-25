@@ -15,7 +15,9 @@
 		"LivingEntityMixin",
 		"CameraMixin",
 		"HeldItemRendererMixin",
-		"MinecraftClientMixin"
+		"MinecraftClientMixin",
+		"ClientPlayerInteractionManagerMixin",
+		"CactusBlockMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
