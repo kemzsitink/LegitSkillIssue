@@ -8,7 +8,7 @@ public class TimerModule extends Module {
     public final NumberSetting speed = new NumberSetting("Speed", 1.0, 0.1, 10.0, 0.1);
 
     public TimerModule() {
-        super("Timer", "Changes the game speed.", Category.MOVEMENT);
+        super("Timer", "Changes game speed.", Category.MOVEMENT);
         addSetting(speed);
     }
 }
