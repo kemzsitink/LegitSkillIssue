@@ -20,29 +20,25 @@ public class ClickGuiScreen extends WindowScreen {
         bg.setHeight(new RelativeConstraint(1.0f));
         window.addChild(bg);
 
-        // Mathematical Grid Layout System
+        // Mathematical Grid Layout System (Tailwind Proportions)
         float startX = 20f;
         float startY = 20f;
-        float panelWidth = 110f;
-        float gapX = 10f;
+        float panelWidth = 230f; // New Tailwind width
+        float gapX = 20f;
         
         float currentX = startX;
 
         for (Category category : Category.values()) {
-            CategoryPanel panel = new CategoryPanel(category);
-            
-            // Absolute positioning
-            panel.setX(new PixelConstraint(currentX));
-            panel.setY(new PixelConstraint(startY));
+            CategoryPanel panel = new CategoryPanel(category, currentX, startY);
             window.addChild(panel);
 
             // Move to next column
             currentX += (panelWidth + gapX);
             
-            // Wrap to next row if it exceeds normal screen width (fallback)
+            // Wrap to next row if it exceeds a reasonable width
             if (currentX > 800f) {
                 currentX = startX;
-                startY += 250f; // Approximate max height of a panel
+                startY += 300f; // Increase height for wrapping
             }
         }
     }

@@ -9,45 +9,48 @@ import java.awt.Color;
 import java.util.List;
 
 public class CategoryPanel extends UIBlock {
-    public CategoryPanel(Category category) {
-        this.setWidth(new PixelConstraint(110.0f));
-        this.setColor(new Color(25, 26, 30, 230)); // Deep dark grey semi-transparent
 
-        // Blurple Header
-        UIBlock header = new UIBlock(new Color(114, 137, 218));
-        header.setWidth(new RelativeConstraint(1.0f));
-        header.setHeight(new PixelConstraint(20.0f));
+    public CategoryPanel(Category category, float startX, float startY) {
+        this.setX(new PixelConstraint(startX));
+        this.setY(new PixelConstraint(startY));
+        this.setWidth(new PixelConstraint(230.0f)); // Tailwind width: w-[230px]
         
-        // UIText with 'false' means shadow disabled for a cleaner, modern look
-        UIText title = new UIText(category.name(), false);
-        title.setX(new CenterConstraint());
+        // Panel Background: rgba(20, 20, 25, 0.45) mapped to roughly 115 alpha, but slightly more opaque for game visibility
+        this.setColor(new Color(20, 20, 25, 150)); 
+
+        // --- HEADER ---
+        // Header Background: bg-black/40
+        UIBlock header = new UIBlock(new Color(0, 0, 0, 102));
+        header.setWidth(new RelativeConstraint(1.0f));
+        header.setHeight(new PixelConstraint(28.0f)); // Tailwind: p-3.5
+        
+        UIText title = new UIText(category.name(), false); 
+        title.setX(new PixelConstraint(10.0f)); // Left aligned
         title.setY(new CenterConstraint());
-        title.setTextScale(new PixelConstraint(0.85f));
+        title.setTextScale(new PixelConstraint(0.9f));
         title.setColor(Color.WHITE);
         header.addChild(title);
+        
         this.addChild(header);
 
-        // Fetch modules for this specific category
+        // --- MODULES LIST ---
         List<com.LegitSkillIssue.client.module.Module> categoryModules = ModuleManager.INSTANCE.getModules().stream()
                 .filter(m -> m.getCategory() == category)
                 .toList();
 
-        // Manual stacking logic using absolute Y-coordinates
-        // This completely bypasses Elementa's buggy ChildBasedSizeConstraint for lists
-        float currentYOffset = 21.0f; // Start 1px below the 20px header
+        float currentYOffset = 30.0f; // Start below header (28px) + 2px padding
 
         for (com.LegitSkillIssue.client.module.Module m : categoryModules) {
             ModuleComponent modComp = new ModuleComponent(m);
-            // Absolutely position each module vertically
+            modComp.setX(new CenterConstraint()); // Center in panel
             modComp.setY(new PixelConstraint(currentYOffset));
             this.addChild(modComp);
             
-            // Move pointer down by the height of the module (16px) + 1px gap
-            currentYOffset += 17.0f;
+            // Height of module (24px) + gap (2px)
+            currentYOffset += 26.0f; 
         }
 
-        // Set the panel's total height based on the final Y coordinate of the last module
-        // + 2px for bottom padding
-        this.setHeight(new PixelConstraint(currentYOffset + 2.0f));
+        // Total height + bottom padding
+        this.setHeight(new PixelConstraint(currentYOffset + 4.0f));
     }
 }

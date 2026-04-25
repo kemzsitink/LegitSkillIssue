@@ -13,31 +13,46 @@ import java.awt.Color;
 
 public class ModuleComponent extends UIBlock {
     private final Module module;
-    private final Color idleColor = new Color(0, 0, 0, 0); // Transparent when off
-    private final Color hoverColor = new Color(255, 255, 255, 20); // Subtle white highlight
-    private final Color activeColor = new Color(114, 137, 218, 150); // Blurple translucent
+    
+    // Tailwind Colors
+    private final Color idleBg = new Color(0, 0, 0, 0); // transparent
+    private final Color hoverBg = new Color(255, 255, 255, 13); // hover:bg-white/5
+    private final Color activeBg = new Color(79, 172, 238, 38); // rgba(79, 172, 238, 0.15)
+    
+    private final Color textActive = Color.WHITE;
+    private final Color textDim = new Color(160, 160, 165); // #a0a0a5
 
     public ModuleComponent(Module module) {
         this.module = module;
         
-        // Exact pixel height, relative width
-        this.setWidth(new RelativeConstraint(1.0f));
-        this.setHeight(new PixelConstraint(16.0f)); 
-        this.setColor(module.isEnabled() ? activeColor : idleColor);
+        // Size: slightly less than panel width (230 - 16 = 214)
+        this.setWidth(new PixelConstraint(214.0f)); 
+        this.setHeight(new PixelConstraint(24.0f));
+        this.setColor(module.isEnabled() ? activeBg : idleBg);
 
-        // No shadow text
+        // Text
         final UIText text = new UIText(module.getName(), false);
-        text.setX(new PixelConstraint(6.0f)); // Left margin
+        text.setX(new PixelConstraint(8.0f)); // Left padding
         text.setY(new CenterConstraint());
-        text.setTextScale(new PixelConstraint(0.8f));
-        text.setColor(module.isEnabled() ? Color.WHITE : new Color(170, 170, 170));
+        text.setTextScale(new PixelConstraint(0.85f));
+        text.setColor(module.isEnabled() ? textActive : textDim);
         this.addChild(text);
+
+        // Active Line (Left Border)
+        UIBlock activeLine = new UIBlock(new Color(79, 172, 238));
+        activeLine.setWidth(new PixelConstraint(2.0f));
+        activeLine.setHeight(new RelativeConstraint(0.6f)); // 60% height
+        activeLine.setX(new PixelConstraint(2.0f));
+        activeLine.setY(new CenterConstraint());
+        if (module.isEnabled()) {
+            this.addChild(activeLine);
+        }
 
         // Hover Effect
         this.onMouseEnter(new Function1<Object, Unit>() {
             @Override
             public Unit invoke(Object event) {
-                if (!module.isEnabled()) setColor(hoverColor);
+                if (!module.isEnabled()) setColor(hoverBg);
                 return Unit.INSTANCE;
             }
         });
@@ -45,18 +60,26 @@ public class ModuleComponent extends UIBlock {
         this.onMouseLeave(new Function1<Object, Unit>() {
             @Override
             public Unit invoke(Object event) {
-                setColor(module.isEnabled() ? activeColor : idleColor);
+                setColor(module.isEnabled() ? activeBg : idleBg);
                 return Unit.INSTANCE;
             }
         });
 
-        // Click Event (Toggle)
+        // Click Event
         this.onMouseClick(new Function2<UIComponent, UIClickEvent, Unit>() {
             @Override
             public Unit invoke(UIComponent comp, UIClickEvent event) {
                 module.toggle();
-                setColor(module.isEnabled() ? activeColor : hoverColor);
-                text.setColor(module.isEnabled() ? Color.WHITE : new Color(170, 170, 170));
+                
+                // Update visuals
+                setColor(module.isEnabled() ? activeBg : hoverBg);
+                text.setColor(module.isEnabled() ? textActive : textDim);
+                
+                if (module.isEnabled() && !getChildren().contains(activeLine)) {
+                    addChild(activeLine);
+                } else if (!module.isEnabled() && getChildren().contains(activeLine)) {
+                    removeChild(activeLine);
+                }
                 return Unit.INSTANCE;
             }
         });
