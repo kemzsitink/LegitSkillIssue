@@ -2,10 +2,11 @@ package com.LegitSkillIssue.client.mixin;
 
 import com.LegitSkillIssue.client.module.ModuleManager;
 import com.LegitSkillIssue.client.module.combat.VelocityModule;
+import com.LegitSkillIssue.client.module.exploit.BypassModule;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
-import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
+import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -23,17 +24,19 @@ public class ClientPlayNetworkHandlerMixin {
                     .findFirst().orElse(null);
 
             if (velocity != null && velocity.isEnabled()) {
-                double h = velocity.horizontal.getValue() / 100.0;
-                double v = velocity.vertical.getValue() / 100.0;
-
-                if (h == 0 && v == 0) {
-                    ci.cancel();
-                } else {
-                    // We can't easily modify the packet fields as they are final in some versions
-                    // but we can use an Accessor if needed. For simplicity, if not 0, we just don't cancel.
-                    // To truly support multipliers, we'd need an Accessor Mixin.
-                }
+                ci.cancel();
             }
+        }
+    }
+
+    @Inject(method = "onPlayerPositionLook", at = @At("HEAD"))
+    private void onPlayerPositionLook(PlayerPositionLookS2CPacket packet, CallbackInfo ci) {
+        BypassModule bypass = (BypassModule) ModuleManager.INSTANCE.getModules().stream()
+                .filter(m -> m instanceof BypassModule)
+                .findFirst().orElse(null);
+
+        if (bypass != null && bypass.isEnabled()) {
+            // Logic to ignore server rotations would go here
         }
     }
 }
