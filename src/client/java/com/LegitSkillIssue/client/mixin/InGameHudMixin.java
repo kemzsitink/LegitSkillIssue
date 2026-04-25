@@ -2,7 +2,7 @@ package com.LegitSkillIssue.client.mixin;
 
 import com.LegitSkillIssue.client.module.ModuleManager;
 import com.LegitSkillIssue.client.module.render.HUDModule;
-import com.LegitSkillIssue.client.module.misc.AntiSpamModule;
+import com.LegitSkillIssue.client.module.misc.AutoTPAModule;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.render.RenderTickCounter;
@@ -14,7 +14,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(InGameHud.class)
 public class InGameHudMixin {
-    private String lastMessage = "";
 
     @Inject(method = "render", at = @At("TAIL"))
     private void onRender(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
@@ -27,6 +26,17 @@ public class InGameHudMixin {
         }
     }
 
-    // This is a placeholder for AntiSpam. 
-    // addMessage has multiple signatures, we would need to target the right one.
+    @Inject(method = "addMessage(Lnet/minecraft/text/Text;)V", at = @At("HEAD"))
+    private void onAddMessage(Text message, CallbackInfo ci) {
+        AutoTPAModule autoTPA = (AutoTPAModule) ModuleManager.INSTANCE.getModules().stream()
+                .filter(m -> m instanceof AutoTPAModule)
+                .findFirst().orElse(null);
+
+        if (autoTPA != null && autoTPA.isEnabled()) {
+            String msg = message.getString().toLowerCase();
+            if (msg.contains("has requested to teleport") || msg.contains("tpa")) {
+                net.minecraft.client.MinecraftClient.getInstance().player.networkHandler.sendCommand("tpaccept");
+            }
+        }
+    }
 }

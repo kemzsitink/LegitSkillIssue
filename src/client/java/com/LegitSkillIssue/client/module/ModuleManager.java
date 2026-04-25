@@ -24,7 +24,6 @@ public class ModuleManager {
         modules.add(new ReachModule());
         modules.add(new CriticalsModule());
         modules.add(new BowAimbotModule());
-        modules.add(new AutoArmorModule());
         modules.add(new AutoPotModule());
         modules.add(new TargetStrafeModule());
         modules.add(new AntiBotModule());
@@ -94,6 +93,7 @@ public class ModuleManager {
 
         // Player
         modules.add(new AutoToolModule());
+        modules.add(new AutoArmorModule()); // Now correctly in player package
         modules.add(new FastPlaceModule());
         modules.add(new FastBreakModule());
         modules.add(new NoFallModule());
