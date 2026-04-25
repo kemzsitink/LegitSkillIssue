@@ -13,25 +13,27 @@ import java.awt.Color;
 
 public class ModuleComponent extends UIBlock {
     private final Module module;
-    private final Color idleColor = new Color(30, 30, 30, 150); // Đen mờ tinh tế
-    private final Color hoverColor = new Color(50, 50, 50, 200); // Xám mờ khi di chuột
-    private final Color activeColor = new Color(114, 137, 218, 255); // Màu chính Discord blurple
+    private final Color idleColor = new Color(0, 0, 0, 0); // Transparent when off
+    private final Color hoverColor = new Color(255, 255, 255, 20); // Subtle white highlight
+    private final Color activeColor = new Color(114, 137, 218, 150); // Blurple translucent
 
     public ModuleComponent(Module module) {
         this.module = module;
         
+        // Exact pixel height, relative width
         this.setWidth(new RelativeConstraint(1.0f));
-        this.setHeight(new PixelConstraint(16.0f)); // Rất nhỏ gọn
+        this.setHeight(new PixelConstraint(16.0f)); 
         this.setColor(module.isEnabled() ? activeColor : idleColor);
 
-        final UIText text = new UIText(module.getName());
-        text.setX(new PixelConstraint(5.0f)); // Căn lề trái 5px
+        // No shadow text
+        final UIText text = new UIText(module.getName(), false);
+        text.setX(new PixelConstraint(6.0f)); // Left margin
         text.setY(new CenterConstraint());
-        text.setTextScale(new PixelConstraint(0.8f)); // Text siêu mỏng
-        text.setColor(Color.WHITE);
+        text.setTextScale(new PixelConstraint(0.8f));
+        text.setColor(module.isEnabled() ? Color.WHITE : new Color(170, 170, 170));
         this.addChild(text);
 
-        // Java-safe Kotlin functional interfaces
+        // Hover Effect
         this.onMouseEnter(new Function1<Object, Unit>() {
             @Override
             public Unit invoke(Object event) {
@@ -48,11 +50,13 @@ public class ModuleComponent extends UIBlock {
             }
         });
 
+        // Click Event (Toggle)
         this.onMouseClick(new Function2<UIComponent, UIClickEvent, Unit>() {
             @Override
             public Unit invoke(UIComponent comp, UIClickEvent event) {
                 module.toggle();
                 setColor(module.isEnabled() ? activeColor : hoverColor);
+                text.setColor(module.isEnabled() ? Color.WHITE : new Color(170, 170, 170));
                 return Unit.INSTANCE;
             }
         });

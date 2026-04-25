@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LegitSkillIssue GUI Prototype</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom scrollbar for module lists */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(114, 137, 218, 0.5);
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(114, 137, 218, 0.8);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 h-screen w-screen flex items-center justify-center overflow-hidden font-sans selection:bg-indigo-500 selection:text-white" style="background-image: url('https://www.minecraft.net/content/dam/games/minecraft/screenshots/1-21-update-key-art.jpg'); background-size: cover; background-position: center; backdrop-filter: blur(8px);">
+
+    <!-- Main GUI Container -->
+    <!-- Đây là nơi bạn thiết kế Layout chính (Grid, Flex, Absolute...) -->
+    <div class="flex flex-wrap justify-center gap-4 p-8 w-full max-w-[1400px]">
+
+        <!-- Category Panel Template -->
+        <!-- Bạn có thể nhân bản cục này, thay đổi màu nền, độ trong suốt, border radius... -->
+        <div class="w-32 bg-[#141414]/90 backdrop-blur-md rounded-lg shadow-2xl border border-white/5 flex flex-col overflow-hidden transition-transform duration-200 hover:scale-105">
+            
+            <!-- Header -->
+            <div class="bg-[#7289da] text-white text-xs font-bold text-center py-1.5 uppercase tracking-wider shadow-md">
+                COMBAT
+            </div>
+
+            <!-- Modules List -->
+            <div class="flex flex-col p-1 gap-0.5 overflow-y-auto max-h-[300px] custom-scrollbar">
+                
+                <!-- Module Component Template (Enabled) -->
+                <!-- Sửa màu active (Màu chính), hover, text size... -->
+                <button class="w-full text-left px-2 py-1 text-[11px] font-medium text-white bg-[#7289da] rounded-[4px] transition-colors duration-150 shadow-sm cursor-pointer border border-[#7289da]/50">
+                    Aura
+                </button>
+
+                <!-- Module Component Template (Disabled) -->
+                <button class="w-full text-left px-2 py-1 text-[11px] font-medium text-gray-300 bg-transparent hover:bg-white/10 rounded-[4px] transition-colors duration-150 cursor-pointer border border-transparent">
+                    AutoClicker
+                </button>
+
+                <button class="w-full text-left px-2 py-1 text-[11px] font-medium text-gray-300 bg-transparent hover:bg-white/10 rounded-[4px] transition-colors duration-150 cursor-pointer border border-transparent">
+                    Velocity
+                </button>
+
+                <button class="w-full text-left px-2 py-1 text-[11px] font-medium text-white bg-[#7289da] rounded-[4px] transition-colors duration-150 shadow-sm cursor-pointer border border-[#7289da]/50">
+                    Reach
+                </button>
+            </div>
+        </div>
+
+        <!-- Another Category Panel (MOVEMENT) -->
+        <div class="w-32 bg-[#141414]/90 backdrop-blur-md rounded-lg shadow-2xl border border-white/5 flex flex-col overflow-hidden transition-transform duration-200 hover:scale-105">
+            <div class="bg-[#7289da] text-white text-xs font-bold text-center py-1.5 uppercase tracking-wider shadow-md">
+                MOVEMENT
+            </div>
+            <div class="flex flex-col p-1 gap-0.5 overflow-y-auto max-h-[300px] custom-scrollbar">
+                <button class="w-full text-left px-2 py-1 text-[11px] font-medium text-gray-300 bg-transparent hover:bg-white/10 rounded-[4px] transition-colors duration-150 cursor-pointer border border-transparent">Speed</button>
+                <button class="w-full text-left px-2 py-1 text-[11px] font-medium text-white bg-[#7289da] rounded-[4px] transition-colors duration-150 shadow-sm cursor-pointer border border-[#7289da]/50">Flight</button>
+                <button class="w-full text-left px-2 py-1 text-[11px] font-medium text-gray-300 bg-transparent hover:bg-white/10 rounded-[4px] transition-colors duration-150 cursor-pointer border border-transparent">Step</button>
+            </div>
+        </div>
+
+        <!-- Another Category Panel (RENDER) -->
+        <div class="w-32 bg-[#141414]/90 backdrop-blur-md rounded-lg shadow-2xl border border-white/5 flex flex-col overflow-hidden transition-transform duration-200 hover:scale-105">
+            <div class="bg-[#7289da] text-white text-xs font-bold text-center py-1.5 uppercase tracking-wider shadow-md">
+                RENDER
+            </div>
+            <div class="flex flex-col p-1 gap-0.5 overflow-y-auto max-h-[300px] custom-scrollbar">
+                <button class="w-full text-left px-2 py-1 text-[11px] font-medium text-white bg-[#7289da] rounded-[4px] transition-colors duration-150 shadow-sm cursor-pointer border border-[#7289da]/50">ESP</button>
+                <button class="w-full text-left px-2 py-1 text-[11px] font-medium text-gray-300 bg-transparent hover:bg-white/10 rounded-[4px] transition-colors duration-150 cursor-pointer border border-transparent">Tracers</button>
+                <button class="w-full text-left px-2 py-1 text-[11px] font-medium text-white bg-[#7289da] rounded-[4px] transition-colors duration-150 shadow-sm cursor-pointer border border-[#7289da]/50">Fullbright</button>
+                <button class="w-full text-left px-2 py-1 text-[11px] font-medium text-gray-300 bg-transparent hover:bg-white/10 rounded-[4px] transition-colors duration-150 cursor-pointer border border-transparent">NameTags</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Hướng dẫn (Bạn có thể xóa đi khi thiết kế) -->
+    <div class="absolute bottom-4 left-4 bg-black/80 text-white p-4 rounded-lg border border-white/10 max-w-md">
+        <h3 class="font-bold text-lg text-[#7289da] mb-2">🎨 Hướng dẫn thiết kế cho Elementa</h3>
+        <ul class="text-sm space-y-1 list-disc pl-4 text-gray-300">
+            <li>Bạn có thể sửa màu nền, độ trong suốt (opacity), bo góc (rounded).</li>
+            <li>Sắp xếp lại các thẻ (Grid, Flex ngang/dọc, Absolute positioning).</li>
+            <li>Sau khi chỉnh sửa xong bằng HTML/Tailwind, hãy gửi lại file này cho Gemini.</li>
+            <li>Gemini sẽ dịch chính xác các thuộc tính CSS của bạn sang Java constraints của Elementa (PixelConstraint, Color, Animations...).</li>
+        </ul>
+    </div>
+</body>
+</html>
