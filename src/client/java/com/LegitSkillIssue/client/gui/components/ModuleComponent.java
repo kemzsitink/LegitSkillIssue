@@ -14,36 +14,36 @@ import java.awt.Color;
 public class ModuleComponent extends UIBlock {
     private final Module module;
     
-    // Tailwind Colors
-    private final Color idleBg = new Color(0, 0, 0, 0); // transparent
-    private final Color hoverBg = new Color(255, 255, 255, 13); // hover:bg-white/5
-    private final Color activeBg = new Color(79, 172, 238, 38); // rgba(79, 172, 238, 0.15)
+    // Transparent when off, subtle hover
+    private final Color idleBg = new Color(0, 0, 0, 0); 
+    private final Color hoverBg = new Color(255, 255, 255, 30); 
+    private final Color activeBg = new Color(79, 172, 238, 80); // Lighter Blurple
     
     private final Color textActive = Color.WHITE;
-    private final Color textDim = new Color(160, 160, 165); // #a0a0a5
+    private final Color textDim = new Color(170, 170, 170); 
 
-    public ModuleComponent(Module module) {
+    public ModuleComponent(Module module, float height) {
         this.module = module;
         
-        // Size: slightly less than panel width (230 - 16 = 214)
-        this.setWidth(new PixelConstraint(214.0f)); 
-        this.setHeight(new PixelConstraint(24.0f));
+        this.setWidth(new RelativeConstraint(1.0f));
+        this.setHeight(new PixelConstraint(height)); 
         this.setColor(module.isEnabled() ? activeBg : idleBg);
 
-        // Text
+        // Text with smaller scale
         final UIText text = new UIText(module.getName(), false);
-        text.setX(new PixelConstraint(8.0f)); // Left padding
+        text.setX(new PixelConstraint(4.0f)); // Small left margin
         text.setY(new CenterConstraint());
-        text.setTextScale(new PixelConstraint(0.85f));
+        text.setTextScale(new PixelConstraint(0.6f)); // Very small font
         text.setColor(module.isEnabled() ? textActive : textDim);
         this.addChild(text);
 
-        // Active Line (Left Border)
+        // Active Line
         UIBlock activeLine = new UIBlock(new Color(79, 172, 238));
-        activeLine.setWidth(new PixelConstraint(2.0f));
-        activeLine.setHeight(new RelativeConstraint(0.6f)); // 60% height
-        activeLine.setX(new PixelConstraint(2.0f));
+        activeLine.setWidth(new PixelConstraint(1.5f)); // Thin line
+        activeLine.setHeight(new RelativeConstraint(0.8f)); // 80% of module height
+        activeLine.setX(new PixelConstraint(0.0f)); // Glued to left edge
         activeLine.setY(new CenterConstraint());
+        
         if (module.isEnabled()) {
             this.addChild(activeLine);
         }
@@ -65,13 +65,12 @@ public class ModuleComponent extends UIBlock {
             }
         });
 
-        // Click Event
+        // Click Event (Toggle)
         this.onMouseClick(new Function2<UIComponent, UIClickEvent, Unit>() {
             @Override
             public Unit invoke(UIComponent comp, UIClickEvent event) {
                 module.toggle();
                 
-                // Update visuals
                 setColor(module.isEnabled() ? activeBg : hoverBg);
                 text.setColor(module.isEnabled() ? textActive : textDim);
                 

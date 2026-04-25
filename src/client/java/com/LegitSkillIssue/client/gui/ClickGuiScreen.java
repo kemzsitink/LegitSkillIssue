@@ -14,31 +14,30 @@ public class ClickGuiScreen extends WindowScreen {
 
         Window window = getWindow();
         
-        // Dark overlay background for the whole screen
+        // Nền tối mờ
         UIBlock bg = new UIBlock(new Color(0, 0, 0, 100));
         bg.setWidth(new RelativeConstraint(1.0f));
         bg.setHeight(new RelativeConstraint(1.0f));
         window.addChild(bg);
 
-        // Mathematical Grid Layout System (Tailwind Proportions)
+        // Kích thước siêu gọn nhẹ (đã tính bù trừ GUI Scale)
         float startX = 20f;
         float startY = 20f;
-        float panelWidth = 230f; // New Tailwind width
-        float gapX = 20f;
+        float panelWidth = 100f; // Thu nhỏ hơn phân nửa
+        float gapX = 10f;
         
         float currentX = startX;
 
         for (Category category : Category.values()) {
-            CategoryPanel panel = new CategoryPanel(category, currentX, startY);
+            CategoryPanel panel = new CategoryPanel(category, currentX, startY, panelWidth);
             window.addChild(panel);
 
-            // Move to next column
             currentX += (panelWidth + gapX);
             
-            // Wrap to next row if it exceeds a reasonable width
-            if (currentX > 800f) {
+            // Tự động xuống dòng nếu vượt quá 500px
+            if (currentX > 500f) {
                 currentX = startX;
-                startY += 300f; // Increase height for wrapping
+                startY += 150f;
             }
         }
     }
