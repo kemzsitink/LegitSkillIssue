@@ -14,10 +14,9 @@ import java.awt.Color;
 public class ModuleComponent extends UIBlock {
     private final Module module;
     
-    // Transparent when off, subtle hover
     private final Color idleBg = new Color(0, 0, 0, 0); 
-    private final Color hoverBg = new Color(255, 255, 255, 30); 
-    private final Color activeBg = new Color(79, 172, 238, 80); // Lighter Blurple
+    private final Color hoverBg = new Color(255, 255, 255, 20); 
+    private final Color activeBg = new Color(79, 172, 238, 50); 
     
     private final Color textActive = Color.WHITE;
     private final Color textDim = new Color(170, 170, 170); 
@@ -25,23 +24,24 @@ public class ModuleComponent extends UIBlock {
     public ModuleComponent(Module module, float height) {
         this.module = module;
         
+        // Use 100% of the dynamically calculated parent width
         this.setWidth(new RelativeConstraint(1.0f));
         this.setHeight(new PixelConstraint(height)); 
         this.setColor(module.isEnabled() ? activeBg : idleBg);
 
-        // Text with smaller scale
+        // Text rendering
         final UIText text = new UIText(module.getName(), false);
         text.setX(new PixelConstraint(4.0f)); // Small left margin
         text.setY(new CenterConstraint());
-        text.setTextScale(new PixelConstraint(0.6f)); // Very small font
+        text.setTextScale(new PixelConstraint(1.0f)); // Pro design: Scale 1.0f for crisp text
         text.setColor(module.isEnabled() ? textActive : textDim);
         this.addChild(text);
 
         // Active Line
         UIBlock activeLine = new UIBlock(new Color(79, 172, 238));
-        activeLine.setWidth(new PixelConstraint(1.5f)); // Thin line
-        activeLine.setHeight(new RelativeConstraint(0.8f)); // 80% of module height
-        activeLine.setX(new PixelConstraint(0.0f)); // Glued to left edge
+        activeLine.setWidth(new PixelConstraint(2.0f)); 
+        activeLine.setHeight(new RelativeConstraint(0.7f)); // 70% of module height
+        activeLine.setX(new PixelConstraint(0.0f)); 
         activeLine.setY(new CenterConstraint());
         
         if (module.isEnabled()) {
