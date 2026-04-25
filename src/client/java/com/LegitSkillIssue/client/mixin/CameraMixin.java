@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(Camera.class)
 public class CameraMixin {
     @Inject(method = "clipToSpace", at = @At("HEAD"), cancellable = true)
-    private void onClipToSpace(double desiredCameraDistance, CallbackInfoReturnable<Double> cir) {
+    private void onClipToSpace(float desiredCameraDistance, CallbackInfoReturnable<Float> cir) {
         CameraClipModule cameraClip = (CameraClipModule) ModuleManager.INSTANCE.getModules().stream()
                 .filter(m -> m instanceof CameraClipModule)
                 .findFirst().orElse(null);
