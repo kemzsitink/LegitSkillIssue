@@ -20,7 +20,8 @@
 		"CactusBlockMixin",
 		"LivingEntityRendererMixin",
 		"PlayerEntityMixin",
-		"PlayerMoveC2SPacketAccessor"
+		"PlayerMoveC2SPacketAccessor",
+		"ChatHudMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
