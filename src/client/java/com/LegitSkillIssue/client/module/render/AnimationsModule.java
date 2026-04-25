@@ -11,4 +11,12 @@ public class AnimationsModule extends Module {
         super("Animations", "Customizes view animations.", Category.RENDER);
         addSetting(swingSpeed);
     }
+
+    @Override
+    public void onTick() {
+        if (mc.player != null && mc.player.handSwingProgress > 0) {
+            // Speed up swing by manipulating progress
+            mc.player.handSwingProgress += (swingSpeed.getValue() - 1.0) * 0.1;
+        }
+    }
 }

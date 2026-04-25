@@ -46,4 +46,7 @@ public abstract class Module {
     
     public void onTick() {}
     public void onRender(DrawContext context, float tickDelta) {}
+    
+    // New: Support for 3D Rendering
+    public void onRender3D(MatrixStack matrices, float tickDelta) {}
 }

@@ -17,7 +17,8 @@
 		"HeldItemRendererMixin",
 		"MinecraftClientMixin",
 		"ClientPlayerInteractionManagerMixin",
-		"CactusBlockMixin"
+		"CactusBlockMixin",
+		"LivingEntityRendererMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
