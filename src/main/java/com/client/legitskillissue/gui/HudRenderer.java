@@ -23,7 +23,14 @@ public class HudRenderer {
 
     private static final Minecraft mc = Minecraft.getMinecraft();
     private final Map<String, Float> slideOffsets = new HashMap<>();
+    private List<Module> sortedModules = null;
     private float chromaHue = 0f;
+
+    private long lastWatermarkUpdate = 0;
+    private String cachedWatermark = "";
+    private int lastFps, lastPing;
+    private float lastTps;
+    private double lastBps;
 
     @SubscribeEvent
     public void onRenderOverlay(RenderGameOverlayEvent.Post event) {
@@ -45,42 +52,62 @@ public class HudRenderer {
         float tps = TpsTracker.INSTANCE.getTps();
         double bps = calculateBPS();
 
-        String tpsStr = String.format("%.1f", tps);
-        String bpsStr = String.format("%.2f", bps);
-        String text = String.format("LegitSkillIssue \u00A77| \u00A7fFPS: %d \u00A77| \u00A7fTPS: %s \u00A77| \u00A7fPing: %dms \u00A77| \u00A7fBPS: %s", fps, tpsStr, ping, bpsStr);
+        if (System.currentTimeMillis() - lastWatermarkUpdate > 100 || 
+            fps != lastFps || ping != lastPing || tps != lastTps || Math.abs(bps - lastBps) > 0.1) {
+            
+            lastFps = fps;
+            lastPing = ping;
+            lastTps = tps;
+            lastBps = bps;
+            lastWatermarkUpdate = System.currentTimeMillis();
+            
+            StringBuilder sb = new StringBuilder(64);
+            sb.append("LegitSkillIssue \u00A77| \u00A7fFPS: ").append(fps)
+              .append(" \u00A77| \u00A7fTPS: ").append(String.format("%.1f", tps))
+              .append(" \u00A77| \u00A7fPing: ").append(ping).append("ms")
+              .append(" \u00A77| \u00A7fBPS: ").append(String.format("%.2f", bps));
+            cachedWatermark = sb.toString();
+        }
 
         int color = hsvToRgb(chromaHue, 0.6f, 1.0f);
+        int textW = mc.fontRendererObj.getStringWidth(cachedWatermark);
         
         // Background rect for watermark
-        Gui.drawRect(2, 2, 6 + mc.fontRendererObj.getStringWidth(text), 14, 0x99000000);
+        Gui.drawRect(2, 2, 6 + textW, 14, 0x99000000);
         // Top accent line
-        Gui.drawRect(2, 2, 6 + mc.fontRendererObj.getStringWidth(text), 3, color);
+        Gui.drawRect(2, 2, 6 + textW, 3, color);
 
-        mc.fontRendererObj.drawString(text, 4, 5, color);
+        mc.fontRendererObj.drawString(cachedWatermark, 4, 5, color);
     }
 
     private void drawArrayList(int screenW) {
-        List<Module> allModules = new ArrayList<>(ModuleManager.INSTANCE.getModules());
-
-        allModules.sort(Comparator.comparingInt(m -> -mc.fontRendererObj.getStringWidth(m.getName())));
+        if (sortedModules == null) {
+            sortedModules = new ArrayList<>(ModuleManager.INSTANCE.getModules());
+            sortedModules.sort(Comparator.comparingInt(m -> -mc.fontRendererObj.getStringWidth(m.getName())));
+        }
 
         int y = 2;
         int fontH = mc.fontRendererObj.FONT_HEIGHT + 2;
 
-        for (int i = 0; i < allModules.size(); i++) {
-            Module m = allModules.get(i);
+        for (int i = 0; i < sortedModules.size(); i++) {
+            Module m = sortedModules.get(i);
             String name = m.getName();
 
-            float current = slideOffsets.getOrDefault(name, 1.0f);
+            Float offsetObj = slideOffsets.get(name);
+            float current = offsetObj != null ? offsetObj : 1.0f;
             float target = m.isEnabled() ? 0.0f : 1.0f;
-            float next = current + (target - current) * 0.15f;
-            if (Math.abs(next - target) < 0.005f) next = target;
-            slideOffsets.put(name, next);
+            
+            if (current != target) {
+                float next = current + (target - current) * 0.15f;
+                if (Math.abs(next - target) < 0.005f) next = target;
+                slideOffsets.put(name, next);
+                current = next;
+            }
 
-            if (next >= 0.999f) continue;
+            if (current >= 0.999f) continue;
 
             int textW = mc.fontRendererObj.getStringWidth(name);
-            int slideX = (int)(textW * next); 
+            int slideX = (int)(textW * current); 
             int drawX = screenW - textW - 4 + slideX;
 
             float hue = (chromaHue + i * 0.05f) % 1.0f;

@@ -20,4 +20,6 @@ bin/
 
 # Logs
 logs/
-*.log
+# IDE and other
+.vscode/
+.kiro/

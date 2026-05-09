@@ -28,6 +28,16 @@ public class WTapMod extends Module {
     }
 
     @Override
+    protected void onDisable() {
+        if (mc.gameSettings != null) {
+            int keyCode = mc.gameSettings.keyBindForward.getKeyCode();
+            KeyBinding.setKeyBindState(keyCode, keyCode != 0 && org.lwjgl.input.Keyboard.isKeyDown(keyCode));
+        }
+        tapping = false;
+        ticks = 0;
+    }
+
+    @Override
     public boolean onPacketSend(net.minecraft.network.Packet<?> packet) {
         if (!(packet instanceof C02PacketUseEntity)) return false;
         if (((C02PacketUseEntity) packet).getAction() != C02PacketUseEntity.Action.ATTACK) return false;

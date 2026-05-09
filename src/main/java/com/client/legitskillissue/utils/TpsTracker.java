@@ -3,18 +3,26 @@ package com.client.legitskillissue.utils;
 import net.minecraft.network.Packet;
 import net.minecraft.network.play.server.S03PacketTimeUpdate;
 
+/**
+ * Tracks server TPS (Ticks Per Second) by monitoring S03PacketTimeUpdate packets.
+ * Used for synchronizing client-side delays with server tick rate.
+ * 
+ * ANTI-CHEAT IMPORTANCE:
+ * - Syncing with server TPS prevents "Impossible timing" flags
+ * - Delays should be multiples of server tick duration (50ms at 20 TPS)
+ */
 public class TpsTracker {
 
     public static final TpsTracker INSTANCE = new TpsTracker();
 
     // Lưu thời điểm nhận S03PacketTimeUpdate gần nhất
-    private long lastPacketTime = -1;
+    private volatile long lastPacketTime = -1;
 
     // Circular buffer chỉ chứa các mẫu TPS thực tế đã đo được
     private static final int SAMPLE_SIZE = 10;
     private final float[] samples = new float[SAMPLE_SIZE];
-    private int count = 0;   // tổng số mẫu đã ghi (không reset)
-    private int head  = 0;   // vị trí ghi tiếp theo trong buffer
+    private volatile int count = 0;   // tổng số mẫu đã ghi (không reset)
+    private volatile int head  = 0;   // vị trí ghi tiếp theo trong buffer
 
     public TpsTracker() {
         reset();
@@ -62,5 +70,55 @@ public class TpsTracker {
             sum += samples[i];
         }
         return sum / available;
+    }
+
+    /**
+     * Gets the duration of one server tick in milliseconds.
+     * At 20 TPS: 50ms/tick
+     * At 10 TPS (lagging): 100ms/tick
+     * 
+     * @return Milliseconds per tick
+     */
+    public long getTickDurationMs() {
+        float tps = getTps();
+        return (long) (1000.0f / tps);
+    }
+
+    /**
+     * Converts a delay in ticks to milliseconds based on current server TPS.
+     * 
+     * @param ticks Number of ticks
+     * @return Delay in milliseconds
+     */
+    public long ticksToMs(int ticks) {
+        return ticks * getTickDurationMs();
+    }
+
+    /**
+     * Converts a delay in milliseconds to ticks based on current server TPS.
+     * 
+     * @param ms Delay in milliseconds
+     * @return Number of ticks
+     */
+    public int msToTicks(long ms) {
+        return (int) (ms / getTickDurationMs());
+    }
+
+    /**
+     * Checks if the server is lagging (TPS < 18).
+     * 
+     * @return true if server is lagging
+     */
+    public boolean isServerLagging() {
+        return getTps() < 18.0f;
+    }
+
+    /**
+     * Gets the number of samples collected.
+     * 
+     * @return Number of TPS samples
+     */
+    public int getSampleCount() {
+        return Math.min(count, SAMPLE_SIZE);
     }
 }

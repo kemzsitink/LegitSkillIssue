@@ -35,9 +35,11 @@ public class ModuleManager {
         modules.add(new BacktrackMod());
         modules.add(new AutoBlinkMod());
         modules.add(new ReachMod());
+        modules.add(new CriticalsMod());
         modules.add(new HitDelayFixMod());
         modules.add(new KeepSprintMod());
         modules.add(new FastEatMod());
+        modules.add(new FastDropMod());
         modules.add(new SilentAuraMod());
         // Render
         modules.add(new PlayerESPMod());

@@ -7,6 +7,9 @@ import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
 
+import com.client.legitskillissue.event.EventTarget;
+import com.client.legitskillissue.event.impl.EventUpdate;
+
 /**
  * REFACTORED (Legitimacy Scan — Protocol Timing):
  *
@@ -21,12 +24,25 @@ import net.minecraft.util.EnumFacing;
  *   - Công thức A (cũ): Gửi C07+C08 mỗi tick khi isUsingItem() && moving
  *   - Công thức B (mới): Gửi 1 lần khi phát hiện bắt đầu dùng item + đang di chuyển,
  *                        sau đó chờ đến khi ngừng dùng item mới reset
+ *   - FIX: Override movement input to bypass client-side 0.2x slowdown.
  */
 public class NoSlowMod extends Module {
 
     private boolean wasSent = false;
 
     public NoSlowMod() { super("NoSlow", Category.MOVEMENT); }
+
+    @EventTarget
+    public void onUpdate(EventUpdate event) {
+        if (mc.thePlayer == null || mc.getNetHandler() == null) return;
+        if (event.isPre) return; // Do it in Post to override slowdown
+
+        boolean usingItem = mc.thePlayer.isUsingItem();
+        if (usingItem && (mc.thePlayer.movementInput.moveForward != 0 || mc.thePlayer.movementInput.moveStrafe != 0)) {
+            mc.thePlayer.movementInput.moveForward *= 5.0F;
+            mc.thePlayer.movementInput.moveStrafe *= 5.0F;
+        }
+    }
 
     @Override
     public void onTick() {

@@ -46,29 +46,52 @@ public class PlayerESPMod extends Module {
         GlStateManager.disableLighting();
         GL11.glLineWidth(1.5f);
 
-        for (Object obj : mc.theWorld.playerEntities.toArray()) {
-            if (!(obj instanceof EntityPlayer)) continue;
-            EntityPlayer p = (EntityPlayer) obj;
-            if (p == mc.thePlayer || p.isDead) continue;
+        Tessellator tess = Tessellator.getInstance();
+        WorldRenderer wr = tess.getWorldRenderer();
 
-            double ex = p.lastTickPosX + (p.posX - p.lastTickPosX) * pt;
-            double ey = p.lastTickPosY + (p.posY - p.lastTickPosY) * pt;
-            double ez = p.lastTickPosZ + (p.posZ - p.lastTickPosZ) * pt;
+        if (filled.getValue()) {
+            wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+            for (EntityPlayer p : mc.theWorld.playerEntities) {
+                if (p == mc.thePlayer || p.isDead) continue;
 
-            AxisAlignedBB bb = new AxisAlignedBB(
-                ex - 0.3, ey,       ez - 0.3,
-                ex + 0.3, ey + 2.0, ez + 0.3
-            );
+                double ex = p.lastTickPosX + (p.posX - p.lastTickPosX) * pt;
+                double ey = p.lastTickPosY + (p.posY - p.lastTickPosY) * pt;
+                double ez = p.lastTickPosZ + (p.posZ - p.lastTickPosZ) * pt;
 
-            boolean sameTeam = mc.thePlayer.getTeam() != null && mc.thePlayer.getTeam().equals(p.getTeam());
-            float r = sameTeam ? 0.2f : 1.0f;
-            float g = sameTeam ? 1.0f : 0.2f;
-            float b = 0.2f;
+                AxisAlignedBB bb = new AxisAlignedBB(
+                    ex - 0.3, ey,       ez - 0.3,
+                    ex + 0.3, ey + 2.0, ez + 0.3
+                );
 
-            if (filled.getValue()) {
-                drawFilledBox(bb, r, g, b, 0.25f);
+                boolean sameTeam = mc.thePlayer.getTeam() != null && mc.thePlayer.getTeam().equals(p.getTeam());
+                float r = sameTeam ? 0.2f : 1.0f;
+                float g = sameTeam ? 1.0f : 0.2f;
+                float b = 0.2f;
+                float a = 0.25f;
+
+                addBoxToBuffer(wr, bb, r, g, b, a);
             }
-            if (outline.getValue()) {
+            tess.draw();
+        }
+
+        if (outline.getValue()) {
+            for (EntityPlayer p : mc.theWorld.playerEntities) {
+                if (p == mc.thePlayer || p.isDead) continue;
+
+                double ex = p.lastTickPosX + (p.posX - p.lastTickPosX) * pt;
+                double ey = p.lastTickPosY + (p.posY - p.lastTickPosY) * pt;
+                double ez = p.lastTickPosZ + (p.posZ - p.lastTickPosZ) * pt;
+
+                AxisAlignedBB bb = new AxisAlignedBB(
+                    ex - 0.3, ey,       ez - 0.3,
+                    ex + 0.3, ey + 2.0, ez + 0.3
+                );
+
+                boolean sameTeam = mc.thePlayer.getTeam() != null && mc.thePlayer.getTeam().equals(p.getTeam());
+                float r = sameTeam ? 0.2f : 1.0f;
+                float g = sameTeam ? 1.0f : 0.2f;
+                float b = 0.2f;
+
                 drawBoundingBox(bb, r, g, b, 0.8f);
             }
         }
@@ -80,45 +103,37 @@ public class PlayerESPMod extends Module {
         GlStateManager.popMatrix();
     }
 
-    private void drawFilledBox(AxisAlignedBB bb, float r, float g, float b, float a) {
-        Tessellator tess = Tessellator.getInstance();
-        WorldRenderer wr = tess.getWorldRenderer();
-        GlStateManager.color(r, g, b, a);
-        
-        wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION);
-        
+    private void addBoxToBuffer(WorldRenderer wr, AxisAlignedBB bb, float r, float g, float b, float a) {
         // Bottom
-        wr.pos(bb.minX, bb.minY, bb.minZ).endVertex();
-        wr.pos(bb.maxX, bb.minY, bb.minZ).endVertex();
-        wr.pos(bb.maxX, bb.minY, bb.maxZ).endVertex();
-        wr.pos(bb.minX, bb.minY, bb.maxZ).endVertex();
+        wr.pos(bb.minX, bb.minY, bb.minZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.maxX, bb.minY, bb.minZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.maxX, bb.minY, bb.maxZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.minX, bb.minY, bb.maxZ).color(r, g, b, a).endVertex();
         // Top
-        wr.pos(bb.minX, bb.maxY, bb.minZ).endVertex();
-        wr.pos(bb.minX, bb.maxY, bb.maxZ).endVertex();
-        wr.pos(bb.maxX, bb.maxY, bb.maxZ).endVertex();
-        wr.pos(bb.maxX, bb.maxY, bb.minZ).endVertex();
+        wr.pos(bb.minX, bb.maxY, bb.minZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.minX, bb.maxY, bb.maxZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.maxX, bb.maxY, bb.maxZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.maxX, bb.maxY, bb.minZ).color(r, g, b, a).endVertex();
         // X-
-        wr.pos(bb.minX, bb.minY, bb.minZ).endVertex();
-        wr.pos(bb.minX, bb.minY, bb.maxZ).endVertex();
-        wr.pos(bb.minX, bb.maxY, bb.maxZ).endVertex();
-        wr.pos(bb.minX, bb.maxY, bb.minZ).endVertex();
+        wr.pos(bb.minX, bb.minY, bb.minZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.minX, bb.minY, bb.maxZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.minX, bb.maxY, bb.maxZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.minX, bb.maxY, bb.minZ).color(r, g, b, a).endVertex();
         // X+
-        wr.pos(bb.maxX, bb.minY, bb.minZ).endVertex();
-        wr.pos(bb.maxX, bb.maxY, bb.minZ).endVertex();
-        wr.pos(bb.maxX, bb.maxY, bb.maxZ).endVertex();
-        wr.pos(bb.maxX, bb.minY, bb.maxZ).endVertex();
+        wr.pos(bb.maxX, bb.minY, bb.minZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.maxX, bb.maxY, bb.minZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.maxX, bb.maxY, bb.maxZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.maxX, bb.minY, bb.maxZ).color(r, g, b, a).endVertex();
         // Z-
-        wr.pos(bb.minX, bb.minY, bb.minZ).endVertex();
-        wr.pos(bb.minX, bb.maxY, bb.minZ).endVertex();
-        wr.pos(bb.maxX, bb.maxY, bb.minZ).endVertex();
-        wr.pos(bb.maxX, bb.minY, bb.minZ).endVertex();
+        wr.pos(bb.minX, bb.minY, bb.minZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.minX, bb.maxY, bb.minZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.maxX, bb.maxY, bb.minZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.maxX, bb.minY, bb.minZ).color(r, g, b, a).endVertex();
         // Z+
-        wr.pos(bb.minX, bb.minY, bb.maxZ).endVertex();
-        wr.pos(bb.maxX, bb.minY, bb.maxZ).endVertex();
-        wr.pos(bb.maxX, bb.maxY, bb.maxZ).endVertex();
-        wr.pos(bb.minX, bb.maxY, bb.maxZ).endVertex();
-
-        tess.draw();
+        wr.pos(bb.minX, bb.minY, bb.maxZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.maxX, bb.minY, bb.maxZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.maxX, bb.maxY, bb.maxZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.minX, bb.maxY, bb.maxZ).color(r, g, b, a).endVertex();
     }
 
     private void drawBoundingBox(AxisAlignedBB bb, float r, float g, float b, float a) {

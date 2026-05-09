@@ -1,7 +1,8 @@
 package com.client.legitskillissue.events;
 
-import com.client.legitskillissue.gui.ReachMenu;
+import com.client.legitskillissue.gui.ClickGUI;
 import com.client.legitskillissue.module.ModuleManager;
+import com.client.legitskillissue.module.impl.player.FastDropMod;
 import com.client.legitskillissue.utils.PacketHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.client.event.MouseEvent;
@@ -11,7 +12,18 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent;
 import org.lwjgl.input.Keyboard;
 
+import com.client.legitskillissue.event.EventBus;
+import com.client.legitskillissue.event.impl.EventRender2D;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
+
 public class ModEventHandler {
+
+    @SubscribeEvent
+    public void onRenderOverlay(RenderGameOverlayEvent.Post event) {
+        if (event.type == RenderGameOverlayEvent.ElementType.ALL) {
+            EventBus.INSTANCE.post(new EventRender2D(event.partialTicks));
+        }
+    }
 
     @SubscribeEvent
     public void onKeyInput(KeyInputEvent event) {
@@ -21,8 +33,14 @@ public class ModEventHandler {
 
         // Open GUI with Right Shift
         if (key == Keyboard.KEY_RSHIFT && Minecraft.getMinecraft().currentScreen == null) {
-            Minecraft.getMinecraft().displayGuiScreen(new ReachMenu());
+            Minecraft.getMinecraft().displayGuiScreen(new ClickGUI());
             return;
+        }
+
+        // FastDrop key handling
+        if (key == Minecraft.getMinecraft().gameSettings.keyBindDrop.getKeyCode()) {
+            FastDropMod fastDrop = ModuleManager.INSTANCE.getModule(FastDropMod.class);
+            if (fastDrop != null) fastDrop.onDropKey();
         }
 
         // Dispatch to module keybinds
@@ -51,15 +69,15 @@ public class ModEventHandler {
         if (event.player != Minecraft.getMinecraft().thePlayer) return;
         
         if (event.phase == TickEvent.Phase.START) {
-            com.client.legitskillissue.event.EventBus.INSTANCE.post(new com.client.legitskillissue.event.impl.EventUpdate(true));
+            EventBus.INSTANCE.post(new com.client.legitskillissue.event.impl.EventUpdate(true));
             ModuleManager.INSTANCE.onTick();
         } else if (event.phase == TickEvent.Phase.END) {
-            com.client.legitskillissue.event.EventBus.INSTANCE.post(new com.client.legitskillissue.event.impl.EventUpdate(false));
+            EventBus.INSTANCE.post(new com.client.legitskillissue.event.impl.EventUpdate(false));
         }
     }
 
     @SubscribeEvent
     public void onRenderWorld(net.minecraftforge.client.event.RenderWorldLastEvent event) {
-        com.client.legitskillissue.event.EventBus.INSTANCE.post(new com.client.legitskillissue.event.impl.EventRender3D(event.partialTicks));
+        EventBus.INSTANCE.post(new com.client.legitskillissue.event.impl.EventRender3D(event.partialTicks));
     }
 }

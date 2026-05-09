@@ -21,6 +21,14 @@ public class ChamsMod extends Module {
         if (!registered) { MinecraftForge.EVENT_BUS.register(this); registered = true; }
     }
 
+    @Override
+    protected void onDisable() {
+        if (registered) {
+            MinecraftForge.EVENT_BUS.unregister(this);
+            registered = false;
+        }
+    }
+
     @SubscribeEvent
     public void onRenderPre(RenderLivingEvent.Pre event) {
         if (!isEnabled() || !(event.entity instanceof EntityPlayer) || event.entity == mc.thePlayer) return;

@@ -15,11 +15,19 @@ public class PacketHandler extends ChannelDuplexHandler {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         if (msg instanceof Packet) {
-            TpsTracker.INSTANCE.onPacketReceive((Packet<?>) msg);
-            EventPacket event = new EventPacket((Packet<?>) msg, false);
-            EventBus.INSTANCE.post(event);
-            if (event.isCancelled() || ModuleManager.INSTANCE.onPacketReceive((Packet<?>) msg)) {
-                return;
+            Packet<?> packet = (Packet<?>) msg;
+            TpsTracker.INSTANCE.onPacketReceive(packet);
+            
+            Minecraft mc = Minecraft.getMinecraft();
+            EventPacket event = new EventPacket(packet, false);
+            
+            // Task: ensure logic accessing thePlayer/theWorld is synchronized or scheduled.
+            // Synchronizing on mc instance as modules access mc.thePlayer/mc.theWorld.
+            synchronized (mc) {
+                EventBus.INSTANCE.post(event);
+                if (event.isCancelled() || ModuleManager.INSTANCE.onPacketReceive(packet)) {
+                    return;
+                }
             }
             msg = event.getPacket(); // In case the packet was replaced
         }
@@ -29,10 +37,15 @@ public class PacketHandler extends ChannelDuplexHandler {
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
         if (msg instanceof Packet) {
-            EventPacket event = new EventPacket((Packet<?>) msg, true);
-            EventBus.INSTANCE.post(event);
-            if (event.isCancelled() || ModuleManager.INSTANCE.onPacketSend((Packet<?>) msg)) {
-                return;
+            Packet<?> packet = (Packet<?>) msg;
+            Minecraft mc = Minecraft.getMinecraft();
+            EventPacket event = new EventPacket(packet, true);
+            
+            synchronized (mc) {
+                EventBus.INSTANCE.post(event);
+                if (event.isCancelled() || ModuleManager.INSTANCE.onPacketSend(packet)) {
+                    return;
+                }
             }
             msg = event.getPacket(); // In case the packet was replaced
         }

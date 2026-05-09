@@ -1,61 +1,78 @@
 package com.client.legitskillissue.event;
 
+import java.lang.invoke.*;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.BiConsumer;
 
 /**
  * ARCHITECT CORE: High-performance Custom Event Bus
- * Bypasses Forge's slow event bus by using direct method invocation caching.
+ * Optimized using LambdaMetafactory to eliminate reflection overhead.
  */
 public class EventBus {
     public static final EventBus INSTANCE = new EventBus();
     
-    private final Map<Class<?>, List<EventData>> registry = new ConcurrentHashMap<>();
+    private final Map<Class<?>, List<Handler>> registry = new ConcurrentHashMap<>();
+    private final MethodHandles.Lookup lookup = MethodHandles.lookup();
 
     public void register(Object obj) {
         for (Method m : obj.getClass().getDeclaredMethods()) {
             if (m.isAnnotationPresent(EventTarget.class) && m.getParameterCount() == 1) {
                 Class<?> eventClass = m.getParameterTypes()[0];
-                if (!registry.containsKey(eventClass)) {
-                    registry.put(eventClass, new CopyOnWriteArrayList<>());
-                }
                 m.setAccessible(true);
-                registry.get(eventClass).add(new EventData(obj, m, m.getAnnotation(EventTarget.class).priority()));
-                registry.get(eventClass).sort(Comparator.comparingInt(data -> data.priority));
+                
+                try {
+                    MethodHandle methodHandle = lookup.unreflect(m);
+                    MethodType invokedType = MethodType.methodType(BiConsumer.class);
+                    MethodType functionType = MethodType.methodType(void.class, Object.class, Object.class);
+                    CallSite callSite = LambdaMetafactory.metafactory(
+                        lookup,
+                        "accept",
+                        invokedType,
+                        functionType,
+                        methodHandle,
+                        methodHandle.type()
+                    );
+                    
+                    BiConsumer<Object, Object> lambda = (BiConsumer<Object, Object>) callSite.getTarget().invokeExact();
+                    
+                    registry.computeIfAbsent(eventClass, k -> new CopyOnWriteArrayList<>())
+                            .add(new Handler(obj, lambda, m.getAnnotation(EventTarget.class).priority()));
+                    
+                    registry.get(eventClass).sort(Comparator.comparingInt(h -> -h.priority));
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                }
             }
         }
     }
 
     public void unregister(Object obj) {
-        for (List<EventData> list : registry.values()) {
-            list.removeIf(data -> data.source == obj);
+        for (List<Handler> list : registry.values()) {
+            list.removeIf(h -> h.source == obj);
         }
     }
 
     public Event post(Event event) {
-        List<EventData> list = registry.get(event.getClass());
+        List<Handler> list = registry.get(event.getClass());
         if (list != null) {
-            for (EventData data : list) {
-                try {
-                    data.target.invoke(data.source, event);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+            for (Handler handler : list) {
+                handler.lambda.accept(handler.source, event);
             }
         }
         return event;
     }
 
-    private static class EventData {
+    private static class Handler {
         public final Object source;
-        public final Method target;
+        public final BiConsumer<Object, Object> lambda;
         public final byte priority;
 
-        public EventData(Object source, Method target, byte priority) {
+        public Handler(Object source, BiConsumer<Object, Object> lambda, byte priority) {
             this.source = source;
-            this.target = target;
+            this.lambda = lambda;
             this.priority = priority;
         }
     }

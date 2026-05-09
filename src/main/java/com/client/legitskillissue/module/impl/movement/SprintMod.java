@@ -18,4 +18,12 @@ public class SprintMod extends Module {
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindSprint.getKeyCode(), true);
         }
     }
+
+    @Override
+    protected void onDisable() {
+        if (mc.gameSettings != null) {
+            int keyCode = mc.gameSettings.keyBindSprint.getKeyCode();
+            KeyBinding.setKeyBindState(keyCode, keyCode != 0 && org.lwjgl.input.Keyboard.isKeyDown(keyCode));
+        }
+    }
 }

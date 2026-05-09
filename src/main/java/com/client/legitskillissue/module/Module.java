@@ -16,7 +16,7 @@ public abstract class Module {
 
     private final String name;
     private final Category category;
-    private boolean enabled;
+    private volatile boolean enabled;
     private int keybind;
     private final List<NumberSetting> settings = new ArrayList<>();
     private final List<ModeSetting> modeSettings = new ArrayList<>();
