@@ -1,5 +1,8 @@
 package com.client.legitskillissue.module.impl.player;
 
+import com.client.legitskillissue.event.EventTarget;
+import com.client.legitskillissue.event.impl.EventUpdate;
+
 import com.client.legitskillissue.module.Category;
 import com.client.legitskillissue.module.Module;
 import com.client.legitskillissue.utils.ReflectionUtil;
@@ -16,10 +19,12 @@ public class FastPlaceMod extends Module {
         super("FastPlace", Category.PLAYER);
     }
 
-    @Override
-    public void onTick() {
-        if (mc.thePlayer == null) return;
-        ReflectionUtil.setInt(DELAY_TIMER, mc, 0);
+    @EventTarget
+    public void onUpdate(EventUpdate event) {
+        if (event.isPre()) {    
+            if (mc.thePlayer == null) return;
+            ReflectionUtil.setInt(DELAY_TIMER, mc, 0);
+                }
     }
 
     @Override

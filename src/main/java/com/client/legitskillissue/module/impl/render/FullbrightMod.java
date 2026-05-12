@@ -1,5 +1,8 @@
 package com.client.legitskillissue.module.impl.render;
 
+import com.client.legitskillissue.event.EventTarget;
+import com.client.legitskillissue.event.impl.EventUpdate;
+
 import com.client.legitskillissue.module.Category;
 import com.client.legitskillissue.module.Module;
 
@@ -17,9 +20,11 @@ public class FullbrightMod extends Module {
         }
     }
 
-    @Override
-    public void onTick() {
-        if (mc.gameSettings != null) mc.gameSettings.gammaSetting = 100.0f;
+    @EventTarget
+    public void onUpdate(EventUpdate event) {
+        if (event.isPre()) {    
+            if (mc.gameSettings != null) mc.gameSettings.gammaSetting = 100.0f;
+                }
     }
 
     @Override

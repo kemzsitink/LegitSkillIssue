@@ -1,5 +1,8 @@
 package com.client.legitskillissue.module.impl.player;
 
+import com.client.legitskillissue.event.EventTarget;
+import com.client.legitskillissue.event.impl.EventUpdate;
+
 import com.client.legitskillissue.module.Category;
 import com.client.legitskillissue.module.Module;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -12,25 +15,27 @@ public class CreativeModeMod extends Module {
         super("CreativeMode", Category.EXPLOIT);
     }
 
-    @Override
-    public void onTick() {
-        if (mc.thePlayer == null || mc.playerController == null) return;
-        
-        // 1. Ép Client chuyển sang chế độ Sáng tạo (Creative)
-        mc.playerController.setGameType(WorldSettings.GameType.CREATIVE);
-
-        // 2. Nếu đang chơi Singleplayer (Chơi Đơn), can thiệp trực tiếp vào Server Nội bộ (Integrated Server)
-        if (mc.isSingleplayer()) {
-            IntegratedServer server = mc.getIntegratedServer();
-            if (server != null && server.getConfigurationManager() != null) {
-                // Lấy bản thể Server (EntityPlayerMP) của chính bạn
-                EntityPlayerMP serverPlayer = server.getConfigurationManager().getPlayerByUUID(mc.thePlayer.getUniqueID());
-                if (serverPlayer != null && serverPlayer.theItemInWorldManager.getGameType() != WorldSettings.GameType.CREATIVE) {
-                    // Ép Server công nhận bạn đang ở chế độ Sáng tạo
-                    serverPlayer.theItemInWorldManager.setGameType(WorldSettings.GameType.CREATIVE);
+    @EventTarget
+    public void onUpdate(EventUpdate event) {
+        if (event.isPre()) {    
+            if (mc.thePlayer == null || mc.playerController == null) return;
+            
+            // 1. Ép Client chuyển sang chế độ Sáng tạo (Creative)
+            mc.playerController.setGameType(WorldSettings.GameType.CREATIVE);
+    
+            // 2. Nếu đang chơi Singleplayer (Chơi Đơn), can thiệp trực tiếp vào Server Nội bộ (Integrated Server)
+            if (mc.isSingleplayer()) {
+                IntegratedServer server = mc.getIntegratedServer();
+                if (server != null && server.getConfigurationManager() != null) {
+                    // Lấy bản thể Server (EntityPlayerMP) của chính bạn
+                    EntityPlayerMP serverPlayer = server.getConfigurationManager().getPlayerByUUID(mc.thePlayer.getUniqueID());
+                    if (serverPlayer != null && serverPlayer.theItemInWorldManager.getGameType() != WorldSettings.GameType.CREATIVE) {
+                        // Ép Server công nhận bạn đang ở chế độ Sáng tạo
+                        serverPlayer.theItemInWorldManager.setGameType(WorldSettings.GameType.CREATIVE);
+                    }
                 }
             }
-        }
+                }
     }
 
     @Override

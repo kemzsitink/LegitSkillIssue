@@ -73,6 +73,16 @@ public final class Logger {
     static {
         // Default: write to console
         GLOBAL_APPENDERS.add(new ConsoleAppender());
+        
+        // Add FileAppender for production
+        try {
+            java.io.File logDir = new java.io.File(net.minecraft.client.Minecraft.getMinecraft().mcDataDir, "legitskillissue/logs");
+            if (!logDir.exists()) logDir.mkdirs();
+            GLOBAL_APPENDERS.add(new FileAppender(new java.io.File(logDir, "client.log").getAbsolutePath()));
+        } catch (Exception e) {
+            System.err.println("[Logger] Failed to initialize FileAppender: " + e.getMessage());
+        }
+
         GLOBAL_QUEUE = new AsyncLogQueue(GLOBAL_APPENDERS);
         GLOBAL_QUEUE.start();
     }

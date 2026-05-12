@@ -35,34 +35,27 @@ public class NoSlowMod extends Module {
     @EventTarget
     public void onUpdate(EventUpdate event) {
         if (mc.thePlayer == null || mc.getNetHandler() == null) return;
-        if (event.isPre) return; // Do it in Post to override slowdown
 
-        boolean usingItem = mc.thePlayer.isUsingItem();
-        if (usingItem && (mc.thePlayer.movementInput.moveForward != 0 || mc.thePlayer.movementInput.moveStrafe != 0)) {
-            mc.thePlayer.movementInput.moveForward *= 5.0F;
-            mc.thePlayer.movementInput.moveStrafe *= 5.0F;
+        if (!event.isPre()) {
+            boolean usingItem = mc.thePlayer.isUsingItem();
+            if (usingItem && (mc.thePlayer.movementInput.moveForward != 0 || mc.thePlayer.movementInput.moveStrafe != 0)) {
+                mc.thePlayer.movementInput.moveForward *= 5.0F;
+                mc.thePlayer.movementInput.moveStrafe *= 5.0F;
+            }
+            return;
         }
-    }
-
-    @Override
-    public void onTick() {
-        if (mc.thePlayer == null || mc.getNetHandler() == null) return;
 
         boolean usingItem = mc.thePlayer.isUsingItem();
         boolean moving    = mc.thePlayer.movementInput.moveForward != 0
                          || mc.thePlayer.movementInput.moveStrafe  != 0;
 
         if (!usingItem) {
-            // Reset khi ngừng dùng item
             wasSent = false;
             return;
         }
 
         if (!moving) return;
 
-        // THAY ĐỔI: Chỉ gửi 1 lần khi bắt đầu (không spam mỗi tick)
-        // Công thức A (cũ): addToSendQueue(C07) + addToSendQueue(C08) mỗi tick
-        // Công thức B (mới): Gửi 1 lần duy nhất khi phát hiện trạng thái mới
         if (!wasSent) {
             mc.getNetHandler().addToSendQueue(
                 new C07PacketPlayerDigging(C07PacketPlayerDigging.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN));

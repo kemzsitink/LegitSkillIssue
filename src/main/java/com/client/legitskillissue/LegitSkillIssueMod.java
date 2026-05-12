@@ -19,5 +19,14 @@ public class LegitSkillIssueMod {
         net.minecraftforge.fml.common.FMLCommonHandler.instance().bus().register(handler);
 
         MinecraftForge.EVENT_BUS.register(new HudRenderer());
+
+        // Load configuration
+        com.client.legitskillissue.utils.ConfigManager.load();
+        
+        // Initialize UI
+        new com.client.legitskillissue.gui.TabGUI();
+        
+        // Add shutdown hook to save configuration
+        Runtime.getRuntime().addShutdownHook(new Thread(com.client.legitskillissue.utils.ConfigManager::save));
     }
 }

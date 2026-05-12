@@ -30,7 +30,10 @@ public class ModeSetting {
 
     public void setMode(String mode) {
         int i = modes.indexOf(mode);
-        if (i != -1) index = i;
+        if (i != -1) {
+            index = i;
+            com.client.legitskillissue.utils.ConfigManager.save();
+        }
     }
 
     public void cycle() {
@@ -39,6 +42,7 @@ public class ModeSetting {
         } else {
             index = 0;
         }
+        com.client.legitskillissue.utils.ConfigManager.save();
     }
 
     public boolean is(String mode) {

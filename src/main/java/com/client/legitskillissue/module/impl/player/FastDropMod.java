@@ -1,5 +1,8 @@
 package com.client.legitskillissue.module.impl.player;
 
+import com.client.legitskillissue.event.EventTarget;
+import com.client.legitskillissue.event.impl.EventUpdate;
+
 import com.client.legitskillissue.module.Category;
 import com.client.legitskillissue.module.Module;
 import com.client.legitskillissue.module.setting.BooleanSetting;
@@ -30,30 +33,32 @@ public class FastDropMod extends Module {
         super("FastDrop", Category.PLAYER);
     }
 
-    @Override
-    public void onTick() {
-        if (mc.thePlayer == null || mc.currentScreen != null) return;
-
-        if (mode.getMode().equalsIgnoreCase("FullInv")) {
-            if (System.currentTimeMillis() < nextDropTime) return;
-
-            int start = hotbarOnly.getValue() ? 36 : 9;
-            int end = 45;
-            
-            boolean dropped = false;
-            for (int i = start; i < end; i++) {
-                if (mc.thePlayer.inventoryContainer.getSlot(i).getHasStack()) {
-                    dropItem(i, true);
-                    dropped = true;
-                    nextDropTime = System.currentTimeMillis() + (long)(delay.getValue() + random.nextInt(20));
-                    break;
+    @EventTarget
+    public void onUpdate(EventUpdate event) {
+        if (event.isPre()) {    
+            if (mc.thePlayer == null || mc.currentScreen != null) return;
+    
+            if (mode.getMode().equalsIgnoreCase("FullInv")) {
+                if (System.currentTimeMillis() < nextDropTime) return;
+    
+                int start = hotbarOnly.getValue() ? 36 : 9;
+                int end = 45;
+                
+                boolean dropped = false;
+                for (int i = start; i < end; i++) {
+                    if (mc.thePlayer.inventoryContainer.getSlot(i).getHasStack()) {
+                        dropItem(i, true);
+                        dropped = true;
+                        nextDropTime = System.currentTimeMillis() + (long)(delay.getValue() + random.nextInt(20));
+                        break;
+                    }
+                }
+                
+                if (!dropped) {
+                    this.toggle(); // Inventory empty
                 }
             }
-            
-            if (!dropped) {
-                this.toggle(); // Inventory empty
-            }
-        }
+                }
     }
 
     public void onDropKey() {

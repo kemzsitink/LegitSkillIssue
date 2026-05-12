@@ -34,7 +34,7 @@ public class ReachMod extends Module {
 
     @EventTarget
     public void onUpdate(EventUpdate event) {
-        if (!event.isPre || mc.thePlayer == null || mc.theWorld == null) return;
+        if (!event.isPre() || mc.thePlayer == null || mc.theWorld == null) return;
         if (mc.currentScreen != null) return;
 
         double currentReach = reach.getValue();

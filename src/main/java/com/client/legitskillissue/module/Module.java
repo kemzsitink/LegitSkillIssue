@@ -41,7 +41,10 @@ public abstract class Module {
     public Category getCategory() { return category; }
     public boolean isEnabled() { return enabled; }
     public int getKeybind()    { return keybind; }
-    public void setKeybind(int key) { this.keybind = key; }
+    public void setKeybind(int key) { 
+        this.keybind = key; 
+        com.client.legitskillissue.utils.ConfigManager.save();
+    }
 
     protected NumberSetting addSetting(NumberSetting s) {
         settings.add(s);
@@ -83,6 +86,7 @@ public abstract class Module {
             EventBus.INSTANCE.unregister(this);
             onDisable();
         }
+        com.client.legitskillissue.utils.ConfigManager.save();
     }
 
     public void toggle() { setEnabled(!enabled); }
@@ -91,7 +95,6 @@ public abstract class Module {
     protected void onDisable() {}
 
     // Legacy method supports (deprecated - moved to @EventTarget onUpdate)
-    public void onTick() {}
     public void onMouseClick(net.minecraftforge.client.event.MouseEvent event) {}
     public boolean onPacketSend(net.minecraft.network.Packet<?> packet)    { return false; }
     public boolean onPacketReceive(net.minecraft.network.Packet<?> packet) { return false; }

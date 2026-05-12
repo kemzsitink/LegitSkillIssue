@@ -1,5 +1,8 @@
 package com.client.legitskillissue.module.impl.combat;
 
+import com.client.legitskillissue.event.EventTarget;
+import com.client.legitskillissue.event.impl.EventUpdate;
+
 import com.client.legitskillissue.module.Category;
 import com.client.legitskillissue.module.Module;
 import com.client.legitskillissue.module.ModuleManager;
@@ -20,42 +23,44 @@ public class HitBoxMod extends Module {
 
     public HitBoxMod() { super("HitBox", Category.COMBAT); }
 
-    @Override
-    public void onTick() {
-        if (mc.theWorld == null || mc.thePlayer == null) return;
-
-        // If ReachMod or other module already found a target, don't overwrite it
-        if (mc.objectMouseOver != null && mc.objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY) {
-            return;
-        }
-
-        Vec3 eye = mc.thePlayer.getPositionEyes(1.0F);
-        Vec3 look = mc.thePlayer.getLook(1.0F);
-        double reach = mc.playerController.getBlockReachDistance();
-        Vec3 end = eye.addVector(look.xCoord * reach, look.yCoord * reach, look.zCoord * reach);
-
-        EntityPlayer best = null;
-        double bestDist = reach;
-        Vec3 bestVec = null;
-
-        for (EntityPlayer p : mc.theWorld.playerEntities) {
-            if (p == mc.thePlayer || p.isDead) continue;
-            
-            AxisAlignedBB expanded = p.getEntityBoundingBox().expand(expand.getValue(), expand.getValue(), expand.getValue());
-            MovingObjectPosition mop = expanded.calculateIntercept(eye, end);
-            
-            if (mop != null) {
-                double d = eye.distanceTo(mop.hitVec);
-                if (d < bestDist) {
-                    best = p;
-                    bestDist = d;
-                    bestVec = mop.hitVec;
+    @EventTarget
+    public void onUpdate(EventUpdate event) {
+        if (event.isPre()) {    
+            if (mc.theWorld == null || mc.thePlayer == null) return;
+    
+            // If ReachMod or other module already found a target, don't overwrite it
+            if (mc.objectMouseOver != null && mc.objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY) {
+                return;
+            }
+    
+            Vec3 eye = mc.thePlayer.getPositionEyes(1.0F);
+            Vec3 look = mc.thePlayer.getLook(1.0F);
+            double reach = mc.playerController.getBlockReachDistance();
+            Vec3 end = eye.addVector(look.xCoord * reach, look.yCoord * reach, look.zCoord * reach);
+    
+            EntityPlayer best = null;
+            double bestDist = reach;
+            Vec3 bestVec = null;
+    
+            for (EntityPlayer p : mc.theWorld.playerEntities) {
+                if (p == mc.thePlayer || p.isDead) continue;
+                
+                AxisAlignedBB expanded = p.getEntityBoundingBox().expand(expand.getValue(), expand.getValue(), expand.getValue());
+                MovingObjectPosition mop = expanded.calculateIntercept(eye, end);
+                
+                if (mop != null) {
+                    double d = eye.distanceTo(mop.hitVec);
+                    if (d < bestDist) {
+                        best = p;
+                        bestDist = d;
+                        bestVec = mop.hitVec;
+                    }
                 }
             }
-        }
-
-        if (best != null) {
-            mc.objectMouseOver = new MovingObjectPosition(best, bestVec);
-        }
+    
+            if (best != null) {
+                mc.objectMouseOver = new MovingObjectPosition(best, bestVec);
+            }
+                }
     }
 }

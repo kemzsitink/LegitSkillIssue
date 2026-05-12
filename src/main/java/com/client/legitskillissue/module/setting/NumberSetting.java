@@ -35,6 +35,7 @@ public class NumberSetting {
         // Snap to step, then clamp
         float snapped = Math.round(v / step) * step;
         this.value = Math.max(min, Math.min(max, snapped));
+        com.client.legitskillissue.utils.ConfigManager.save();
     }
 
     /** Convenience — returns value as int (for tick-based settings). */

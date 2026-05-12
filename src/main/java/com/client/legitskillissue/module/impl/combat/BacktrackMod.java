@@ -1,5 +1,8 @@
 package com.client.legitskillissue.module.impl.combat;
 
+import com.client.legitskillissue.event.EventTarget;
+import com.client.legitskillissue.event.impl.EventUpdate;
+
 import com.client.legitskillissue.module.Category;
 import com.client.legitskillissue.module.Module;
 import com.client.legitskillissue.module.setting.NumberSetting;
@@ -43,37 +46,39 @@ public class BacktrackMod extends Module {
         super("Backtrack", Category.COMBAT);
     }
 
-    @Override
-    public void onTick() {
-        if (mc.getNetHandler() == null) return;
-        
-        long now = System.currentTimeMillis();
-        long effectiveDelay = delayMs.getInt();
-        
-        // Sync with server TPS if enabled
-        if (tpsSync.getValue()) {
-            // Adjust delay based on server TPS
-            // If server is lagging (TPS < 20), increase delay proportionally
-            float tps = TpsTracker.INSTANCE.getTps();
-            effectiveDelay = (long) (effectiveDelay * (20.0f / tps));
-        }
-        
-        // Process delayed packets
-        for (Queue<DelayedPacket> queue : queues.values()) {
-            while (!queue.isEmpty() && now - queue.peek().time >= effectiveDelay) {
-                DelayedPacket dp = queue.poll();
-                if (dp != null) dp.packet.processPacket(mc.getNetHandler());
+    @EventTarget
+    public void onUpdate(EventUpdate event) {
+        if (event.isPre()) {    
+            if (mc.getNetHandler() == null) return;
+            
+            long now = System.currentTimeMillis();
+            long effectiveDelay = delayMs.getInt();
+            
+            // Sync with server TPS if enabled
+            if (tpsSync.getValue()) {
+                // Adjust delay based on server TPS
+                // If server is lagging (TPS < 20), increase delay proportionally
+                float tps = TpsTracker.INSTANCE.getTps();
+                effectiveDelay = (long) (effectiveDelay * (20.0f / tps));
             }
-        }
-        
-        // Cleanup: Remove queues for entities not seen in 5 seconds (memory leak fix)
-        lastSeenTime.entrySet().removeIf(entry -> {
-            if (now - entry.getValue() > 5000) {
-                queues.remove(entry.getKey());
-                return true;
+            
+            // Process delayed packets
+            for (Queue<DelayedPacket> queue : queues.values()) {
+                while (!queue.isEmpty() && now - queue.peek().time >= effectiveDelay) {
+                    DelayedPacket dp = queue.poll();
+                    if (dp != null) dp.packet.processPacket(mc.getNetHandler());
+                }
             }
-            return false;
-        });
+            
+            // Cleanup: Remove queues for entities not seen in 5 seconds (memory leak fix)
+            lastSeenTime.entrySet().removeIf(entry -> {
+                if (now - entry.getValue() > 5000) {
+                    queues.remove(entry.getKey());
+                    return true;
+                }
+                return false;
+            });
+                }
     }
 
     @Override

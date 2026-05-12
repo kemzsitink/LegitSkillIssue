@@ -1,5 +1,8 @@
 package com.client.legitskillissue.module.impl.combat;
 
+import com.client.legitskillissue.event.EventTarget;
+import com.client.legitskillissue.event.impl.EventUpdate;
+
 import com.client.legitskillissue.module.Category;
 import com.client.legitskillissue.module.Module;
 import com.client.legitskillissue.module.setting.BooleanSetting;
@@ -53,16 +56,18 @@ public class VelocityMod extends Module {
         super("Velocity", Category.COMBAT);
     }
 
-    @Override
-    public void onTick() {
-        // Jump Reset mode logic
-        if (shouldJump && jumpTicks > 0) {
-            jumpTicks--;
-            if (jumpTicks == 0 && mc.thePlayer != null && mc.thePlayer.onGround) {
-                mc.thePlayer.jump();
-                shouldJump = false;
+    @EventTarget
+    public void onUpdate(EventUpdate event) {
+        if (event.isPre()) {    
+            // Jump Reset mode logic
+            if (shouldJump && jumpTicks > 0) {
+                jumpTicks--;
+                if (jumpTicks == 0 && mc.thePlayer != null && mc.thePlayer.onGround) {
+                    mc.thePlayer.jump();
+                    shouldJump = false;
+                }
             }
-        }
+                }
     }
 
     @Override

@@ -38,6 +38,36 @@ public class MovementUtils {
         return baseSpeed;
     }
 
+    public static double getSpeed() {
+        if (mc.thePlayer == null) return 0;
+        return Math.sqrt(mc.thePlayer.motionX * mc.thePlayer.motionX + mc.thePlayer.motionZ * mc.thePlayer.motionZ);
+    }
+
+    public static void setSpeed(double speed) {
+        if (mc.thePlayer == null || !isMoving()) return;
+
+        float yaw = mc.thePlayer.rotationYaw;
+        float forward = mc.thePlayer.movementInput.moveForward;
+        float strafe = mc.thePlayer.movementInput.moveStrafe;
+
+        if (forward != 0.0F) {
+            if (strafe > 0.0F) {
+                yaw += (float) (forward > 0.0F ? -45 : 45);
+            } else if (strafe < 0.0F) {
+                yaw += (float) (forward > 0.0F ? 45 : -45);
+            }
+            strafe = 0.0F;
+            if (forward > 0.0F) {
+                forward = 1.0F;
+            } else if (forward < 0.0F) {
+                forward = -1.0F;
+            }
+        }
+
+        mc.thePlayer.motionX = (forward * speed * Math.cos(Math.toRadians(yaw + 90.0F)) + strafe * speed * Math.sin(Math.toRadians(yaw + 90.0F)));
+        mc.thePlayer.motionZ = (forward * speed * Math.sin(Math.toRadians(yaw + 90.0F)) - strafe * speed * Math.cos(Math.toRadians(yaw + 90.0F)));
+    }
+
     public static float[] applyGCD(float yaw, float pitch, float prevYaw, float prevPitch) {
         float f = mc.gameSettings.mouseSensitivity * 0.6F + 0.2F;
         float gcd = f * f * f * 1.2F;

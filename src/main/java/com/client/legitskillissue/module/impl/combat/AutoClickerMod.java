@@ -1,5 +1,8 @@
 package com.client.legitskillissue.module.impl.combat;
 
+import com.client.legitskillissue.event.EventTarget;
+import com.client.legitskillissue.event.impl.EventUpdate;
+
 import com.client.legitskillissue.module.Category;
 import com.client.legitskillissue.module.Module;
 import com.client.legitskillissue.module.setting.NumberSetting;
@@ -41,42 +44,44 @@ public class AutoClickerMod extends Module {
         targetCps = RandomUtils.gaussianRandomClamped(mean, 1.0, minCps.getValue(), maxCps.getValue());
     }
 
-    @Override
-    public void onTick() {
-        if (mc.currentScreen != null || mc.thePlayer == null) return;
-        if (!Mouse.isButtonDown(0)) return;
-
-        // Only fire when actually looking at an entity — never on block/miss
-        MovingObjectPosition mop = mc.objectMouseOver;
-        if (mop == null || mop.typeOfHit != MovingObjectPosition.MovingObjectType.ENTITY) return;
-
-        Entity target = mop.entityHit;
-        if (target == null || target.isDead) return;
-
-        long now = System.currentTimeMillis();
-        
-        // Calculate delay using Gaussian distribution
-        long delay = RandomUtils.clickDelay(targetCps);
-        
-        if (now - lastClick < delay) return;
-
-        lastClick = now;
-        
-        // CPS Stability: slowly drift CPS over time (mimic human fatigue/warmup)
-        if (cpsStability.getValue()) {
-            // Drift CPS every ~5 seconds
-            if ((now - sessionStart) % 5000 < 50) {
-                double mean = (minCps.getValue() + maxCps.getValue()) / 2.0;
-                double drift = RandomUtils.gaussianRandom(0, 0.5); // Small drift
-                targetCps = Math.max(minCps.getValue(), Math.min(maxCps.getValue(), targetCps + drift));
+    @EventTarget
+    public void onUpdate(EventUpdate event) {
+        if (event.isPre()) {    
+            if (mc.currentScreen != null || mc.thePlayer == null) return;
+            if (!Mouse.isButtonDown(0)) return;
+    
+            // Only fire when actually looking at an entity — never on block/miss
+            MovingObjectPosition mop = mc.objectMouseOver;
+            if (mop == null || mop.typeOfHit != MovingObjectPosition.MovingObjectType.ENTITY) return;
+    
+            Entity target = mop.entityHit;
+            if (target == null || target.isDead) return;
+    
+            long now = System.currentTimeMillis();
+            
+            // Calculate delay using Gaussian distribution
+            long delay = RandomUtils.clickDelay(targetCps);
+            
+            if (now - lastClick < delay) return;
+    
+            lastClick = now;
+            
+            // CPS Stability: slowly drift CPS over time (mimic human fatigue/warmup)
+            if (cpsStability.getValue()) {
+                // Drift CPS every ~5 seconds
+                if ((now - sessionStart) % 5000 < 50) {
+                    double mean = (minCps.getValue() + maxCps.getValue()) / 2.0;
+                    double drift = RandomUtils.gaussianRandom(0, 0.5); // Small drift
+                    targetCps = Math.max(minCps.getValue(), Math.min(maxCps.getValue(), targetCps + drift));
+                }
+            } else {
+                // No stability: randomize CPS each click (old behavior, more detectable)
+                targetCps = minCps.getValue() + Math.random() * (maxCps.getValue() - minCps.getValue());
             }
-        } else {
-            // No stability: randomize CPS each click (old behavior, more detectable)
-            targetCps = minCps.getValue() + Math.random() * (maxCps.getValue() - minCps.getValue());
-        }
-
-        // Attack directly — no swingItem spam on miss/block
-        mc.playerController.attackEntity(mc.thePlayer, target);
-        mc.thePlayer.swingItem();
+    
+            // Attack directly — no swingItem spam on miss/block
+            mc.playerController.attackEntity(mc.thePlayer, target);
+            mc.thePlayer.swingItem();
+                }
     }
 }

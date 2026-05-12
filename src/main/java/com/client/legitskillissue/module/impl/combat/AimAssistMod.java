@@ -35,7 +35,7 @@ public class AimAssistMod extends Module {
 
     @EventTarget
     public void onUpdate(EventUpdate event) {
-        if (!event.isPre) return;
+        if (!event.isPre()) return;
         if (mc.thePlayer == null || mc.theWorld == null) return;
         if (mc.currentScreen != null) return;
         if (clickOnly.getValue() && !Mouse.isButtonDown(0)) return;
@@ -43,6 +43,7 @@ public class AimAssistMod extends Module {
         // Find best target based on FOV and Distance
         List<EntityPlayer> targets = mc.theWorld.playerEntities.stream()
                 .filter(e -> e != mc.thePlayer && !e.isDead && e.getDistanceToEntity(mc.thePlayer) <= range.getValue())
+                .filter(e -> !com.client.legitskillissue.utils.FriendManager.isFriend(e.getName())) // Filter friends
                 .filter(e -> RotationUtils.isInFov(e, fov.getValue()))
                 .sorted(Comparator.comparingDouble(e -> mc.thePlayer.getDistanceToEntity(e)))
                 .collect(Collectors.toList());

@@ -1,6 +1,7 @@
 package com.client.legitskillissue.module.impl.combat;
 
 import com.client.legitskillissue.event.EventTarget;
+import com.client.legitskillissue.event.impl.EventUpdate;
 import com.client.legitskillissue.event.impl.EventPacket;
 import com.client.legitskillissue.module.Category;
 import com.client.legitskillissue.module.Module;
@@ -10,6 +11,11 @@ import com.client.legitskillissue.module.setting.BooleanSetting;
 import com.client.legitskillissue.utils.MovementUtils;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.play.client.C03PacketPlayer;
+import net.minecraft.network.play.client.C07PacketPlayerDigging;
+import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement;
+import net.minecraft.item.ItemSword;
+import net.minecraft.util.BlockPos;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.MathHelper;
 
 import java.util.ArrayList;
@@ -38,6 +44,7 @@ import java.util.stream.Collectors;
 public class SilentAuraMod extends Module {
 
     public final ModeSetting mode = addSetting(new ModeSetting("Mode", "Target mode", "Single", "Multi", "Switch"));
+    public final ModeSetting autoBlock = addSetting(new ModeSetting("AutoBlock", "Auto block mode", "None", "Fake", "Interact", "Timing"));
     public final NumberSetting range    = addSetting(new NumberSetting("SA Range",    "Attack range",           2.0f, 6.0f, 0.1f, 4.0f));
     public final NumberSetting minDelay = addSetting(new NumberSetting("SA MinDelay", "Min ticks between hits", 2f,   10f,  1f,   4f));
     public final NumberSetting maxDelay = addSetting(new NumberSetting("SA MaxDelay", "Max ticks between hits", 2f,   10f,  1f,   7f));
@@ -54,6 +61,7 @@ public class SilentAuraMod extends Module {
     private float   currentYaw;
     private float   currentPitch;
     private boolean isSpoofing = false;
+    private boolean isBlocking = false;
 
     private int ticksUntilAttack = 0;
     private final Random rng = new Random();
@@ -74,74 +82,95 @@ public class SilentAuraMod extends Module {
         }
     }
 
-    @Override
-    public void onTick() {
-        if (mc.thePlayer == null || mc.theWorld == null) return;
-
-        // Update target list based on mode
-        updateTargets();
-
-        if (targets.isEmpty()) {
-            isSpoofing = false;
-            currentTarget = null;
-            return;
-        }
-
-        // Select current target based on mode
-        String currentMode = mode.getMode();
-        if (currentMode.equals("Single")) {
-            currentTarget = targets.get(0); // Always attack closest
-        } else if (currentMode.equals("Multi")) {
-            // Multi mode: attack all targets in list
-            currentTarget = targets.get(currentTargetIndex % targets.size());
-        } else if (currentMode.equals("Switch")) {
-            // Switch mode: change target every X ticks
-            switchTicks++;
-            if (switchTicks >= switchDelay.getInt()) {
-                currentTargetIndex = (currentTargetIndex + 1) % targets.size();
-                switchTicks = 0;
+    @EventTarget
+    public void onUpdate(EventUpdate event) {
+        if (event.isPre()) {    
+            if (mc.thePlayer == null || mc.theWorld == null) return;
+    
+            // Update target list based on mode
+            updateTargets();
+    
+            if (targets.isEmpty()) {
+                isSpoofing = false;
+                currentTarget = null;
+                return;
             }
-            currentTarget = targets.get(currentTargetIndex);
-        }
-
-        if (currentTarget == null) {
-            isSpoofing = false;
-            return;
-        }
-
-        // Calculate target rotation
-        float[] targetRots = calcRotation(currentTarget);
-
-        // Interpolate rotation with 30°/tick clamp
-        float diffYaw   = MathHelper.wrapAngleTo180_float(targetRots[0] - currentYaw);
-        float diffPitch = MathHelper.wrapAngleTo180_float(targetRots[1] - currentPitch);
-        diffYaw   = MathHelper.clamp_float(diffYaw,   -MovementUtils.MAX_ROTATION_DELTA_PER_TICK, MovementUtils.MAX_ROTATION_DELTA_PER_TICK);
-        diffPitch = MathHelper.clamp_float(diffPitch, -MovementUtils.MAX_ROTATION_DELTA_PER_TICK, MovementUtils.MAX_ROTATION_DELTA_PER_TICK);
-
-        float[] interpolated = MovementUtils.applyGCD(
-                currentYaw + diffYaw, currentPitch + diffPitch,
-                currentYaw, currentPitch);
-        currentYaw   = interpolated[0];
-        currentPitch = MathHelper.clamp_float(interpolated[1], -90f, 90f);
-        isSpoofing   = true;
-
-        // Attack logic
-        ticksUntilAttack--;
-        if (ticksUntilAttack <= 0) {
-            ticksUntilAttack = nextDelay();
-
-            // Multi mode: attack multiple targets
-            if (currentMode.equals("Multi")) {
-                int attackCount = Math.min(targets.size(), (int) maxTargets.getValue());
-                for (int i = 0; i < attackCount; i++) {
-                    EntityPlayer target = targets.get(i);
-                    attackTarget(target);
+    
+            // Select current target based on mode
+            String currentMode = mode.getMode();
+            if (currentMode.equals("Single")) {
+                currentTarget = targets.get(0); // Always attack closest
+            } else if (currentMode.equals("Multi")) {
+                // Multi mode: attack all targets in list
+                currentTarget = targets.get(currentTargetIndex % targets.size());
+            } else if (currentMode.equals("Switch")) {
+                // Switch mode: change target every X ticks
+                switchTicks++;
+                if (switchTicks >= switchDelay.getInt()) {
+                    currentTargetIndex = (currentTargetIndex + 1) % targets.size();
+                    switchTicks = 0;
                 }
-            } else {
-                // Single/Switch mode: attack current target
-                attackTarget(currentTarget);
+                currentTarget = targets.get(currentTargetIndex);
+            }
+    
+            if (currentTarget == null) {
+                isSpoofing = false;
+                return;
+            }
+    
+            // Calculate target rotation
+            float[] targetRots = calcRotation(currentTarget);
+    
+            // Interpolate rotation with 30°/tick clamp
+            float diffYaw   = MathHelper.wrapAngleTo180_float(targetRots[0] - currentYaw);
+            float diffPitch = MathHelper.wrapAngleTo180_float(targetRots[1] - currentPitch);
+            diffYaw   = MathHelper.clamp_float(diffYaw,   -MovementUtils.MAX_ROTATION_DELTA_PER_TICK, MovementUtils.MAX_ROTATION_DELTA_PER_TICK);
+            diffPitch = MathHelper.clamp_float(diffPitch, -MovementUtils.MAX_ROTATION_DELTA_PER_TICK, MovementUtils.MAX_ROTATION_DELTA_PER_TICK);
+    
+            float[] interpolated = MovementUtils.applyGCD(
+                    currentYaw + diffYaw, currentPitch + diffPitch,
+                    currentYaw, currentPitch);
+            currentYaw   = interpolated[0];
+            currentPitch = MathHelper.clamp_float(interpolated[1], -90f, 90f);
+            isSpoofing   = true;
+    
+            // Attack logic
+            ticksUntilAttack--;
+            if (ticksUntilAttack <= 0) {
+                ticksUntilAttack = nextDelay();
+    
+                // Multi mode: attack multiple targets
+                if (currentMode.equals("Multi")) {
+                    int attackCount = Math.min(targets.size(), (int) maxTargets.getValue());
+                    for (int i = 0; i < attackCount; i++) {
+                        EntityPlayer target = targets.get(i);
+                        attackTarget(target);
+                    }
+                } else {
+                    // Single/Switch mode: attack current target
+                    attackTarget(currentTarget);
+                }
+            }
+
+            // Timing mode blocking
+            if (autoBlock.getMode().equals("Timing") && currentTarget != null) {
+                if (currentTarget.swingProgress > 0 || mc.thePlayer.hurtTime > 0) {
+                    doBlock();
+                } else {
+                    doUnblock();
+                }
+            } else if (!autoBlock.getMode().equals("None") && !autoBlock.getMode().equals("Timing") && currentTarget != null) {
+                // Ensure we block if not attacking this tick in Interact/Fake modes
+                doBlock();
+            } else if (currentTarget == null) {
+                doUnblock();
             }
         }
+    }
+
+    @Override
+    protected void onDisable() {
+        doUnblock();
     }
 
     /**
@@ -154,6 +183,7 @@ public class SilentAuraMod extends Module {
         List<EntityPlayer> potentialTargets = mc.theWorld.playerEntities.stream()
             .filter(p -> p != mc.thePlayer && !p.isDead)
             .filter(p -> mc.thePlayer.getDistanceSqToEntity(p) <= rangeSq)
+            .filter(p -> !com.client.legitskillissue.utils.FriendManager.isFriend(p.getName())) // Filter friends
             .filter(p -> !antiBot.getValue() || !AntiBotMod.isBot(p)) // Filter bots
             .sorted(Comparator.comparingDouble(p -> mc.thePlayer.getDistanceSqToEntity(p)))
             .collect(Collectors.toList());
@@ -183,12 +213,44 @@ public class SilentAuraMod extends Module {
         mc.thePlayer.rotationYaw   = currentYaw;
         mc.thePlayer.rotationPitch = currentPitch;
 
+        doUnblock();
+
         mc.thePlayer.swingItem();
         mc.playerController.attackEntity(mc.thePlayer, target);
+
+        if (!autoBlock.getMode().equals("Timing")) {
+            doBlock();
+        }
 
         // Restore rotation immediately
         mc.thePlayer.rotationYaw   = savedYaw;
         mc.thePlayer.rotationPitch = savedPitch;
+    }
+
+    private boolean isHoldingSword() {
+        return mc.thePlayer.getCurrentEquippedItem() != null && mc.thePlayer.getCurrentEquippedItem().getItem() instanceof ItemSword;
+    }
+
+    private void doBlock() {
+        if (!isHoldingSword() || isBlocking) return;
+        String abMode = autoBlock.getMode();
+        if (abMode.equals("None")) return;
+
+        if (abMode.equals("Interact") || abMode.equals("Timing")) {
+            mc.getNetHandler().addToSendQueue(new C08PacketPlayerBlockPlacement(mc.thePlayer.getCurrentEquippedItem()));
+        }
+        mc.thePlayer.setItemInUse(mc.thePlayer.getCurrentEquippedItem(), 71999);
+        isBlocking = true;
+    }
+
+    private void doUnblock() {
+        if (!isHoldingSword() || !isBlocking) return;
+        String abMode = autoBlock.getMode();
+        
+        if (abMode.equals("Interact") || abMode.equals("Timing")) {
+            mc.getNetHandler().addToSendQueue(new C07PacketPlayerDigging(C07PacketPlayerDigging.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN));
+        }
+        isBlocking = false;
     }
 
     @EventTarget

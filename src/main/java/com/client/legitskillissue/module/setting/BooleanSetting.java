@@ -26,9 +26,11 @@ public class BooleanSetting {
 
     public void setValue(boolean value) {
         this.value = value;
+        com.client.legitskillissue.utils.ConfigManager.save();
     }
 
     public void toggle() {
         this.value = !this.value;
+        com.client.legitskillissue.utils.ConfigManager.save();
     }
 }

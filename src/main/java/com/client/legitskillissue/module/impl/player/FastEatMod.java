@@ -1,5 +1,8 @@
 package com.client.legitskillissue.module.impl.player;
 
+import com.client.legitskillissue.event.EventTarget;
+import com.client.legitskillissue.event.impl.EventUpdate;
+
 import com.client.legitskillissue.module.Category;
 import com.client.legitskillissue.module.Module;
 import com.client.legitskillissue.utils.ReflectionUtil;
@@ -20,20 +23,22 @@ public class FastEatMod extends Module {
         super("FastEat", Category.PLAYER);
     }
 
-    @Override
-    public void onTick() {
-        if (mc.thePlayer == null || ITEM_IN_USE_COUNT == null) return;
-        if (!mc.thePlayer.isUsingItem()) return;
-
-        ItemStack stack = mc.thePlayer.getCurrentEquippedItem();
-        if (stack == null) return;
-        if (!(stack.getItem() instanceof ItemFood) && !(stack.getItem() instanceof ItemPotion)) return;
-
-        if (mc.thePlayer.getItemInUseDuration() >= 1) {
-            try {
-                int current = ITEM_IN_USE_COUNT.getInt(mc.thePlayer);
-                ITEM_IN_USE_COUNT.setInt(mc.thePlayer, Math.max(0, current - 4));
-            } catch (Exception ignored) {}
-        }
+    @EventTarget
+    public void onUpdate(EventUpdate event) {
+        if (event.isPre()) {    
+            if (mc.thePlayer == null || ITEM_IN_USE_COUNT == null) return;
+            if (!mc.thePlayer.isUsingItem()) return;
+    
+            ItemStack stack = mc.thePlayer.getCurrentEquippedItem();
+            if (stack == null) return;
+            if (!(stack.getItem() instanceof ItemFood) && !(stack.getItem() instanceof ItemPotion)) return;
+    
+            if (mc.thePlayer.getItemInUseDuration() >= 1) {
+                try {
+                    int current = ITEM_IN_USE_COUNT.getInt(mc.thePlayer);
+                    ITEM_IN_USE_COUNT.setInt(mc.thePlayer, Math.max(0, current - 4));
+                } catch (Exception ignored) {}
+            }
+                }
     }
 }

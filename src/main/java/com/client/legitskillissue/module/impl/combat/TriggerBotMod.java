@@ -1,5 +1,8 @@
 package com.client.legitskillissue.module.impl.combat;
 
+import com.client.legitskillissue.event.EventTarget;
+import com.client.legitskillissue.event.impl.EventUpdate;
+
 import com.client.legitskillissue.module.Category;
 import com.client.legitskillissue.module.Module;
 import com.client.legitskillissue.module.setting.NumberSetting;
@@ -33,34 +36,37 @@ public class TriggerBotMod extends Module {
 
     public TriggerBotMod() { super("TriggerBot", Category.COMBAT); }
 
-    @Override
-    public void onTick() {
-        if (mc.thePlayer == null || mc.currentScreen != null || CLICK_MOUSE == null) return;
-
-        MovingObjectPosition mop = mc.objectMouseOver;
-        boolean onTarget = mop != null
-                && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY
-                && mop.entityHit instanceof EntityPlayer
-                && mop.entityHit != mc.thePlayer
-                && !mop.entityHit.isDead;
-
-        if (!onTarget) { targetSince = -1; nextClickAt = -1; return; }
-
-        long now = System.currentTimeMillis();
-        if (targetSince == -1) {
-            targetSince = now;
-            // Use Gaussian distribution for realistic human reaction time
-            double mean = (minDelay.getValue() + maxDelay.getValue()) / 2.0;
-            double stdDev = (maxDelay.getValue() - minDelay.getValue()) / 4.0; // ~95% within range
-            long delay = (long) RandomUtils.gaussianRandomClamped(mean, stdDev, minDelay.getValue(), maxDelay.getValue());
-            nextClickAt = now + delay;
-            return;
-        }
-        if (now < nextClickAt) return;
-
-        ReflectionUtil.invoke(CLICK_MOUSE, mc);
-        targetSince = -1;
-        nextClickAt = -1;
+    @EventTarget
+    public void onUpdate(EventUpdate event) {
+        if (event.isPre()) {    
+            if (mc.thePlayer == null || mc.currentScreen != null || CLICK_MOUSE == null) return;
+    
+            MovingObjectPosition mop = mc.objectMouseOver;
+            boolean onTarget = mop != null
+                    && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY
+                    && mop.entityHit instanceof EntityPlayer
+                    && mop.entityHit != mc.thePlayer
+                    && !com.client.legitskillissue.utils.FriendManager.isFriend(mop.entityHit.getName()) // Filter friends
+                    && !mop.entityHit.isDead;
+    
+            if (!onTarget) { targetSince = -1; nextClickAt = -1; return; }
+    
+            long now = System.currentTimeMillis();
+            if (targetSince == -1) {
+                targetSince = now;
+                // Use Gaussian distribution for realistic human reaction time
+                double mean = (minDelay.getValue() + maxDelay.getValue()) / 2.0;
+                double stdDev = (maxDelay.getValue() - minDelay.getValue()) / 4.0; // ~95% within range
+                long delay = (long) RandomUtils.gaussianRandomClamped(mean, stdDev, minDelay.getValue(), maxDelay.getValue());
+                nextClickAt = now + delay;
+                return;
+            }
+            if (now < nextClickAt) return;
+    
+            ReflectionUtil.invoke(CLICK_MOUSE, mc);
+            targetSince = -1;
+            nextClickAt = -1;
+                }
     }
 
     @Override

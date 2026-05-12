@@ -1,5 +1,8 @@
 package com.client.legitskillissue.module.impl.player;
 
+import com.client.legitskillissue.event.EventTarget;
+import com.client.legitskillissue.event.impl.EventUpdate;
+
 import com.client.legitskillissue.module.Category;
 import com.client.legitskillissue.module.Module;
 import net.minecraft.network.Packet;
@@ -43,22 +46,24 @@ public class AutoBlinkMod extends Module {
         packets.clear();
     }
 
-    @Override
-    public void onTick() {
-        if (mc.thePlayer == null || mc.getNetHandler() == null) {
-            packets.clear();
-            return;
-        }
-
-        // Tự động bật/tắt mỗi 3 giây
-        if (System.currentTimeMillis() - lastToggleTime >= 3000) {
-            isBlinking     = !isBlinking;
-            lastToggleTime = System.currentTimeMillis();
-
-            if (!isBlinking) {
-                flushPackets();
+    @EventTarget
+    public void onUpdate(EventUpdate event) {
+        if (event.isPre()) {    
+            if (mc.thePlayer == null || mc.getNetHandler() == null) {
+                packets.clear();
+                return;
             }
-        }
+    
+            // Tự động bật/tắt mỗi 3 giây
+            if (System.currentTimeMillis() - lastToggleTime >= 3000) {
+                isBlinking     = !isBlinking;
+                lastToggleTime = System.currentTimeMillis();
+    
+                if (!isBlinking) {
+                    flushPackets();
+                }
+            }
+                }
     }
 
     @Override

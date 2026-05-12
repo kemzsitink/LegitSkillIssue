@@ -8,4 +8,8 @@ public class EventUpdate extends Event {
     public EventUpdate(boolean isPre) {
         this.isPre = isPre;
     }
+
+    public boolean isPre() {
+        return isPre;
+    }
 }

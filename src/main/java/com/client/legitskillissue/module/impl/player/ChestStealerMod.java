@@ -1,5 +1,8 @@
 package com.client.legitskillissue.module.impl.player;
 
+import com.client.legitskillissue.event.EventTarget;
+import com.client.legitskillissue.event.impl.EventUpdate;
+
 import com.client.legitskillissue.module.Category;
 import com.client.legitskillissue.module.Module;
 import com.client.legitskillissue.module.setting.BooleanSetting;
@@ -32,35 +35,37 @@ public class ChestStealerMod extends Module {
         super("ChestStealer", Category.PLAYER);
     }
 
-    @Override
-    public void onTick() {
-        if (mc.thePlayer == null || mc.playerController == null) return;
-        if (!(mc.currentScreen instanceof GuiChest)) return;
-
-        GuiChest gui = (GuiChest) mc.currentScreen;
-        ContainerChest container = (ContainerChest) gui.inventorySlots;
-
-        if (System.currentTimeMillis() < nextClickTime) return;
-
-        int size = container.getLowerChestInventory().getSizeInventory();
-        boolean isEmpty = true;
-
-        for (int i = 0; i < size; i++) {
-            Slot slot = container.getSlot(i);
-            if (slot.getHasStack()) {
-                isEmpty = false;
-                mc.playerController.windowClick(container.windowId, slot.slotNumber, 0, 1, mc.thePlayer);
-                
-                // Set next randomized delay
-                long delay = (long) (minDelay.getValue() + random.nextDouble() * (maxDelay.getValue() - minDelay.getValue()));
-                nextClickTime = System.currentTimeMillis() + delay;
-                return;
+    @EventTarget
+    public void onUpdate(EventUpdate event) {
+        if (event.isPre()) {    
+            if (mc.thePlayer == null || mc.playerController == null) return;
+            if (!(mc.currentScreen instanceof GuiChest)) return;
+    
+            GuiChest gui = (GuiChest) mc.currentScreen;
+            ContainerChest container = (ContainerChest) gui.inventorySlots;
+    
+            if (System.currentTimeMillis() < nextClickTime) return;
+    
+            int size = container.getLowerChestInventory().getSizeInventory();
+            boolean isEmpty = true;
+    
+            for (int i = 0; i < size; i++) {
+                Slot slot = container.getSlot(i);
+                if (slot.getHasStack()) {
+                    isEmpty = false;
+                    mc.playerController.windowClick(container.windowId, slot.slotNumber, 0, 1, mc.thePlayer);
+                    
+                    // Set next randomized delay
+                    long delay = (long) (minDelay.getValue() + random.nextDouble() * (maxDelay.getValue() - minDelay.getValue()));
+                    nextClickTime = System.currentTimeMillis() + delay;
+                    return;
+                }
             }
-        }
-
-        if (isEmpty && autoClose.getValue()) {
-            mc.thePlayer.closeScreen();
-        }
+    
+            if (isEmpty && autoClose.getValue()) {
+                mc.thePlayer.closeScreen();
+            }
+                }
     }
 
     @Override

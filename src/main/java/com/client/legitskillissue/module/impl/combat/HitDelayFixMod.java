@@ -1,5 +1,8 @@
 package com.client.legitskillissue.module.impl.combat;
 
+import com.client.legitskillissue.event.EventTarget;
+import com.client.legitskillissue.event.impl.EventUpdate;
+
 import com.client.legitskillissue.module.Category;
 import com.client.legitskillissue.module.Module;
 import com.client.legitskillissue.utils.ReflectionUtil;
@@ -17,9 +20,11 @@ public class HitDelayFixMod extends Module {
 
     public HitDelayFixMod() { super("HitDelayFix", Category.COMBAT); }
 
-    @Override
-    public void onTick() {
-        if (mc.thePlayer == null || mc.currentScreen != null) return;
-        ReflectionUtil.setInt(LEFT_CLICK_COUNTER, mc, 0);
+    @EventTarget
+    public void onUpdate(EventUpdate event) {
+        if (event.isPre()) {    
+            if (mc.thePlayer == null || mc.currentScreen != null) return;
+            ReflectionUtil.setInt(LEFT_CLICK_COUNTER, mc, 0);
+                }
     }
 }

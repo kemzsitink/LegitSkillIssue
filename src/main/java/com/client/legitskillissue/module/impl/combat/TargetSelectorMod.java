@@ -1,5 +1,8 @@
 package com.client.legitskillissue.module.impl.combat;
 
+import com.client.legitskillissue.event.EventTarget;
+import com.client.legitskillissue.event.impl.EventUpdate;
+
 import com.client.legitskillissue.module.Category;
 import com.client.legitskillissue.module.Module;
 import com.client.legitskillissue.module.setting.BooleanSetting;
@@ -66,15 +69,17 @@ public class TargetSelectorMod extends Module {
         instance = this;
     }
 
-    @Override
-    public void onTick() {
-        if (mc.thePlayer == null || mc.theWorld == null) return;
-
-        // Update damage tracker
-        cleanupDamageTracker();
-        
-        // Update current target
-        updateTarget();
+    @EventTarget
+    public void onUpdate(EventUpdate event) {
+        if (event.isPre()) {    
+            if (mc.thePlayer == null || mc.theWorld == null) return;
+    
+            // Update damage tracker
+            cleanupDamageTracker();
+            
+            // Update current target
+            updateTarget();
+                }
     }
 
     /**

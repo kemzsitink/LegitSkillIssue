@@ -1,5 +1,8 @@
 package com.client.legitskillissue.module.impl.player;
 
+import com.client.legitskillissue.event.EventTarget;
+import com.client.legitskillissue.event.impl.EventUpdate;
+
 import com.client.legitskillissue.module.Category;
 import com.client.legitskillissue.module.Module;
 import com.client.legitskillissue.module.setting.BooleanSetting;
@@ -51,40 +54,42 @@ public class AutoArmorMod extends Module {
         super("AutoArmor", Category.PLAYER);
     }
 
-    @Override
-    public void onTick() {
-        if (mc.thePlayer == null || mc.thePlayer.capabilities.isCreativeMode) return;
-        
-        // Check if inventory should be open
-        if (openInv.getValue() && !(mc.currentScreen instanceof GuiInventory)) {
-            return;
-        }
-
-        // Delay between equips
-        long now = System.currentTimeMillis();
-        if (isEquipping && now - lastEquipTime < getRandomDelay()) {
-            return;
-        }
-
-        // Check each armor slot
-        for (int armorSlot = 0; armorSlot < 4; armorSlot++) {
-            ItemStack currentArmor = mc.thePlayer.inventory.armorInventory[armorSlot];
+    @EventTarget
+    public void onUpdate(EventUpdate event) {
+        if (event.isPre()) {    
+            if (mc.thePlayer == null || mc.thePlayer.capabilities.isCreativeMode) return;
             
-            // Check if current armor needs replacement
-            if (shouldReplaceArmor(currentArmor, armorSlot)) {
-                ItemStack bestArmor = findBestArmor(armorSlot);
+            // Check if inventory should be open
+            if (openInv.getValue() && !(mc.currentScreen instanceof GuiInventory)) {
+                return;
+            }
+    
+            // Delay between equips
+            long now = System.currentTimeMillis();
+            if (isEquipping && now - lastEquipTime < getRandomDelay()) {
+                return;
+            }
+    
+            // Check each armor slot
+            for (int armorSlot = 0; armorSlot < 4; armorSlot++) {
+                ItemStack currentArmor = mc.thePlayer.inventory.armorInventory[armorSlot];
                 
-                if (bestArmor != null) {
-                    int bestSlot = getArmorSlot(bestArmor, armorSlot);
-                    if (bestSlot != -1) {
-                        equipArmor(bestSlot, armorSlot);
-                        return; // Only equip one piece per tick
+                // Check if current armor needs replacement
+                if (shouldReplaceArmor(currentArmor, armorSlot)) {
+                    ItemStack bestArmor = findBestArmor(armorSlot);
+                    
+                    if (bestArmor != null) {
+                        int bestSlot = getArmorSlot(bestArmor, armorSlot);
+                        if (bestSlot != -1) {
+                            equipArmor(bestSlot, armorSlot);
+                            return; // Only equip one piece per tick
+                        }
                     }
                 }
             }
-        }
-        
-        isEquipping = false;
+            
+            isEquipping = false;
+                }
     }
 
     /**

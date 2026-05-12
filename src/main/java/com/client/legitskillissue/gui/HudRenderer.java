@@ -28,7 +28,7 @@ public class HudRenderer {
 
     private long lastWatermarkUpdate = 0;
     private String cachedWatermark = "";
-    private int lastFps, lastPing;
+    private int lastFps, lastPing, lastEntities;
     private float lastTps;
     private double lastBps;
 
@@ -51,21 +51,25 @@ public class HudRenderer {
         int ping = getPing();
         float tps = TpsTracker.INSTANCE.getTps();
         double bps = calculateBPS();
+        int entities = mc.theWorld.loadedEntityList.size();
 
         if (System.currentTimeMillis() - lastWatermarkUpdate > 100 || 
-            fps != lastFps || ping != lastPing || tps != lastTps || Math.abs(bps - lastBps) > 0.1) {
+            fps != lastFps || ping != lastPing || tps != lastTps || 
+            Math.abs(bps - lastBps) > 0.1 || entities != lastEntities) {
             
             lastFps = fps;
             lastPing = ping;
             lastTps = tps;
             lastBps = bps;
+            lastEntities = entities;
             lastWatermarkUpdate = System.currentTimeMillis();
             
             StringBuilder sb = new StringBuilder(64);
             sb.append("LegitSkillIssue \u00A77| \u00A7fFPS: ").append(fps)
               .append(" \u00A77| \u00A7fTPS: ").append(String.format("%.1f", tps))
               .append(" \u00A77| \u00A7fPing: ").append(ping).append("ms")
-              .append(" \u00A77| \u00A7fBPS: ").append(String.format("%.2f", bps));
+              .append(" \u00A77| \u00A7fBPS: ").append(String.format("%.2f", bps))
+              .append(" \u00A77| \u00A7fEnt: ").append(entities);
             cachedWatermark = sb.toString();
         }
 

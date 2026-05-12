@@ -1,5 +1,8 @@
 package com.client.legitskillissue.module.impl.movement;
 
+import com.client.legitskillissue.event.EventTarget;
+import com.client.legitskillissue.event.impl.EventUpdate;
+
 import com.client.legitskillissue.module.Category;
 import com.client.legitskillissue.module.Module;
 import net.minecraft.network.play.client.C02PacketUseEntity;
@@ -10,12 +13,14 @@ public class KeepSprintMod extends Module {
 
     public KeepSprintMod() { super("KeepSprint", Category.MOVEMENT); }
 
-    @Override
-    public void onTick() {
-        if (!pendingResprint) return;
-        pendingResprint = false;
-        if (mc.thePlayer == null) return;
-        mc.thePlayer.setSprinting(true);
+    @EventTarget
+    public void onUpdate(EventUpdate event) {
+        if (event.isPre()) {    
+            if (!pendingResprint) return;
+            pendingResprint = false;
+            if (mc.thePlayer == null) return;
+            mc.thePlayer.setSprinting(true);
+                }
     }
 
     @Override

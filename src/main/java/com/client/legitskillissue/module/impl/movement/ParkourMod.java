@@ -1,5 +1,8 @@
 package com.client.legitskillissue.module.impl.movement;
 
+import com.client.legitskillissue.event.EventTarget;
+import com.client.legitskillissue.event.impl.EventUpdate;
+
 import com.client.legitskillissue.module.Category;
 import com.client.legitskillissue.module.Module;
 import com.client.legitskillissue.module.setting.BooleanSetting;
@@ -48,36 +51,38 @@ public class ParkourMod extends Module {
         super("Parkour", Category.MOVEMENT);
     }
 
-    @Override
-    public void onTick() {
-        if (mc.thePlayer == null || mc.theWorld == null) return;
-
-        String currentMode = mode.getMode();
-        
-        // Auto Jump
-        if (shouldUseFeature("autoJump", currentMode) && autoJump.getValue()) {
-            handleAutoJump();
-        }
-        
-        // Safe Walk
-        if (shouldUseFeature("safeWalk", currentMode) && safeWalk.getValue()) {
-            handleSafeWalk();
-        }
-        
-        // Jump Boost
-        if (shouldUseFeature("jumpBoost", currentMode) && jumpBoost.getValue()) {
-            handleJumpBoost();
-        }
-        
-        // Head Hitter
-        if (shouldUseFeature("headHitter", currentMode) && headHitter.getValue()) {
-            handleHeadHitter();
-        }
-        
-        // Water Bucket
-        if (shouldUseFeature("waterBucket", currentMode) && waterBucket.getValue()) {
-            handleWaterBucket();
-        }
+    @EventTarget
+    public void onUpdate(EventUpdate event) {
+        if (event.isPre()) {    
+            if (mc.thePlayer == null || mc.theWorld == null) return;
+    
+            String currentMode = mode.getMode();
+            
+            // Auto Jump
+            if (shouldUseFeature("autoJump", currentMode) && autoJump.getValue()) {
+                handleAutoJump();
+            }
+            
+            // Safe Walk
+            if (shouldUseFeature("safeWalk", currentMode) && safeWalk.getValue()) {
+                handleSafeWalk();
+            }
+            
+            // Jump Boost
+            if (shouldUseFeature("jumpBoost", currentMode) && jumpBoost.getValue()) {
+                handleJumpBoost();
+            }
+            
+            // Head Hitter
+            if (shouldUseFeature("headHitter", currentMode) && headHitter.getValue()) {
+                handleHeadHitter();
+            }
+            
+            // Water Bucket
+            if (shouldUseFeature("waterBucket", currentMode) && waterBucket.getValue()) {
+                handleWaterBucket();
+            }
+                }
     }
 
     /**

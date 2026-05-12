@@ -1,5 +1,8 @@
 package com.client.legitskillissue.module.impl.movement;
 
+import com.client.legitskillissue.event.EventTarget;
+import com.client.legitskillissue.event.impl.EventUpdate;
+
 import com.client.legitskillissue.module.Category;
 import com.client.legitskillissue.module.Module;
 import net.minecraft.util.AxisAlignedBB;
@@ -45,33 +48,35 @@ public class AirJumpMod extends Module {
         usedAirJump   = false;
     }
 
-    @Override
-    public void onTick() {
-        if (mc.thePlayer == null || mc.theWorld == null) return;
-
-        boolean isJumpDown = mc.gameSettings.keyBindJump.isKeyDown();
-
-        // Reset air-jump khi chạm đất thực sự (kiểm tra AABB theo chỉ thị §1)
-        if (isOnGroundReal()) {
-            usedAirJump = false;
-        }
-
-        // Phát hiện nhấn jump mới (rising edge)
-        if (isJumpDown && !lastJumpState) {
-            boolean inAir = !mc.thePlayer.onGround
-                    && !mc.thePlayer.isInWater()
-                    && !mc.thePlayer.isInLava();
-
-            if (inAir && !usedAirJump) {
-                // THAY ĐỔI: Chỉ gọi jump() — áp dụng motionY = 0.42F đúng vanilla
-                // Công thức A (cũ): Gửi packet C06 với onGround=true và Y+1E-10
-                // Công thức B (mới): mc.thePlayer.jump() — không can thiệp packet
-                mc.thePlayer.jump();
-                usedAirJump = true;
+    @EventTarget
+    public void onUpdate(EventUpdate event) {
+        if (event.isPre()) {    
+            if (mc.thePlayer == null || mc.theWorld == null) return;
+    
+            boolean isJumpDown = mc.gameSettings.keyBindJump.isKeyDown();
+    
+            // Reset air-jump khi chạm đất thực sự (kiểm tra AABB theo chỉ thị §1)
+            if (isOnGroundReal()) {
+                usedAirJump = false;
             }
-        }
-
-        lastJumpState = isJumpDown;
+    
+            // Phát hiện nhấn jump mới (rising edge)
+            if (isJumpDown && !lastJumpState) {
+                boolean inAir = !mc.thePlayer.onGround
+                        && !mc.thePlayer.isInWater()
+                        && !mc.thePlayer.isInLava();
+    
+                if (inAir && !usedAirJump) {
+                    // THAY ĐỔI: Chỉ gọi jump() — áp dụng motionY = 0.42F đúng vanilla
+                    // Công thức A (cũ): Gửi packet C06 với onGround=true và Y+1E-10
+                    // Công thức B (mới): mc.thePlayer.jump() — không can thiệp packet
+                    mc.thePlayer.jump();
+                    usedAirJump = true;
+                }
+            }
+    
+            lastJumpState = isJumpDown;
+                }
     }
 
     /**

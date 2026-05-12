@@ -1,5 +1,8 @@
 package com.client.legitskillissue.module.impl.combat;
 
+import com.client.legitskillissue.event.EventTarget;
+import com.client.legitskillissue.event.impl.EventUpdate;
+
 import com.client.legitskillissue.module.Category;
 import com.client.legitskillissue.module.Module;
 import com.client.legitskillissue.module.setting.BooleanSetting;
@@ -39,6 +42,7 @@ public class AntiBotMod extends Module {
     public final BooleanSetting entityId = addSetting(new BooleanSetting("Entity ID", "Check sequential entity IDs", true));
     public final BooleanSetting ping = addSetting(new BooleanSetting("Ping", "Check ping values", true));
     public final BooleanSetting invisible = addSetting(new BooleanSetting("Invisible", "Detect invisible entities", true));
+    public final BooleanSetting rotation = addSetting(new BooleanSetting("Rotation", "Detect suspicious rotations", true));
     public final BooleanSetting logDetections = addSetting(new BooleanSetting("Log", "Log bot detections", false));
 
     private static final Logger logger = Logger.getLogger(AntiBotMod.class);
@@ -47,6 +51,8 @@ public class AntiBotMod extends Module {
     private final Set<UUID> detectedBots = ConcurrentHashMap.newKeySet();
     private final Map<UUID, Long> spawnTimes = new ConcurrentHashMap<>();
     private final Map<UUID, Integer> entityIds = new ConcurrentHashMap<>();
+    private final Map<UUID, Float> lastYaw = new ConcurrentHashMap<>();
+    private final Map<UUID, Integer> erraticRotations = new ConcurrentHashMap<>();
     private final Set<UUID> whitelist = ConcurrentHashMap.newKeySet();
     
     // Spawn pattern detection
@@ -68,107 +74,119 @@ public class AntiBotMod extends Module {
         super("AntiBot", Category.COMBAT);
     }
 
-    @Override
-    public void onTick() {
-        if (mc.thePlayer == null || mc.theWorld == null) return;
-
-        // Check all players in world
-        for (Entity entity : mc.theWorld.loadedEntityList) {
-            if (!(entity instanceof EntityPlayer)) continue;
-            if (entity == mc.thePlayer) continue;
-            
-            EntityPlayer player = (EntityPlayer) entity;
-            UUID uuid = player.getUniqueID();
-            
-            // Skip whitelisted players
-            if (whitelist.contains(uuid)) continue;
-            
-            // Skip already detected bots
-            if (detectedBots.contains(uuid)) continue;
-            
-            // Run detection checks
-            int suspicionScore = 0;
-            int maxScore = 0;
-            
-            if (tabList.getValue()) {
-                maxScore += 3;
-                if (!isInTabList(player)) {
-                    suspicionScore += 3;
+    @EventTarget
+    public void onUpdate(EventUpdate event) {
+        if (event.isPre()) {    
+            if (mc.thePlayer == null || mc.theWorld == null) return;
+    
+            // Check all players in world
+            for (Entity entity : mc.theWorld.loadedEntityList) {
+                if (!(entity instanceof EntityPlayer)) continue;
+                if (entity == mc.thePlayer) continue;
+                
+                EntityPlayer player = (EntityPlayer) entity;
+                UUID uuid = player.getUniqueID();
+                
+                // Skip whitelisted players
+                if (whitelist.contains(uuid)) continue;
+                
+                // Skip already detected bots
+                if (detectedBots.contains(uuid)) continue;
+                
+                // Run detection checks
+                int suspicionScore = 0;
+                int maxScore = 0;
+                
+                if (tabList.getValue()) {
+                    maxScore += 3;
+                    if (!isInTabList(player)) {
+                        suspicionScore += 3;
+                        if (logDetections.getValue()) {
+                            logger.info("Bot detected (Tab List): " + player.getName());
+                        }
+                    }
+                }
+                
+                if (namePattern.getValue()) {
+                    maxScore += 2;
+                    if (hasBotnamePattern(player.getName())) {
+                        suspicionScore += 2;
+                        if (logDetections.getValue()) {
+                            logger.info("Bot detected (Name Pattern): " + player.getName());
+                        }
+                    }
+                }
+                
+                if (spawnPattern.getValue()) {
+                    maxScore += 2;
+                    if (isSpawnBurst(player)) {
+                        suspicionScore += 2;
+                        if (logDetections.getValue()) {
+                            logger.info("Bot detected (Spawn Pattern): " + player.getName());
+                        }
+                    }
+                }
+                
+                if (entityId.getValue()) {
+                    maxScore += 1;
+                    if (hasSequentialEntityId(player)) {
+                        suspicionScore += 1;
+                        if (logDetections.getValue()) {
+                            logger.info("Bot detected (Entity ID): " + player.getName());
+                        }
+                    }
+                }
+                
+                if (ping.getValue()) {
+                    maxScore += 2;
+                    if (hasSuspiciousPing(player)) {
+                        suspicionScore += 2;
+                        if (logDetections.getValue()) {
+                            logger.info("Bot detected (Ping): " + player.getName());
+                        }
+                    }
+                }
+                
+                if (invisible.getValue()) {
+                    maxScore += 1;
+                    if (player.isInvisible()) {
+                        suspicionScore += 1;
+                        if (logDetections.getValue()) {
+                            logger.info("Bot detected (Invisible): " + player.getName());
+                        }
+                    }
+                }
+                
+                if (rotation.getValue()) {
+                    maxScore += 2;
+                    if (hasSuspiciousRotation(player)) {
+                        suspicionScore += 2;
+                        if (logDetections.getValue()) {
+                            logger.info("Bot detected (Rotation): " + player.getName());
+                        }
+                    }
+                }
+                
+                // Calculate threshold based on sensitivity
+                float threshold = 0.5f; // Medium
+                if (sensitivity.getMode().equals("Low")) {
+                    threshold = 0.7f; // Need 70% suspicion
+                } else if (sensitivity.getMode().equals("High")) {
+                    threshold = 0.3f; // Need 30% suspicion
+                }
+                
+                // Mark as bot if suspicion exceeds threshold
+                if (maxScore > 0 && (float) suspicionScore / maxScore >= threshold) {
+                    detectedBots.add(uuid);
                     if (logDetections.getValue()) {
-                        logger.info("Bot detected (Tab List): " + player.getName());
+                        logger.warn("CONFIRMED BOT: " + player.getName() + " (Score: " + suspicionScore + "/" + maxScore + ")");
                     }
                 }
             }
             
-            if (namePattern.getValue()) {
-                maxScore += 2;
-                if (hasBotnamePattern(player.getName())) {
-                    suspicionScore += 2;
-                    if (logDetections.getValue()) {
-                        logger.info("Bot detected (Name Pattern): " + player.getName());
-                    }
+            // Cleanup old data
+            cleanupOldData();
                 }
-            }
-            
-            if (spawnPattern.getValue()) {
-                maxScore += 2;
-                if (isSpawnBurst(player)) {
-                    suspicionScore += 2;
-                    if (logDetections.getValue()) {
-                        logger.info("Bot detected (Spawn Pattern): " + player.getName());
-                    }
-                }
-            }
-            
-            if (entityId.getValue()) {
-                maxScore += 1;
-                if (hasSequentialEntityId(player)) {
-                    suspicionScore += 1;
-                    if (logDetections.getValue()) {
-                        logger.info("Bot detected (Entity ID): " + player.getName());
-                    }
-                }
-            }
-            
-            if (ping.getValue()) {
-                maxScore += 2;
-                if (hasSuspiciousPing(player)) {
-                    suspicionScore += 2;
-                    if (logDetections.getValue()) {
-                        logger.info("Bot detected (Ping): " + player.getName());
-                    }
-                }
-            }
-            
-            if (invisible.getValue()) {
-                maxScore += 1;
-                if (player.isInvisible()) {
-                    suspicionScore += 1;
-                    if (logDetections.getValue()) {
-                        logger.info("Bot detected (Invisible): " + player.getName());
-                    }
-                }
-            }
-            
-            // Calculate threshold based on sensitivity
-            float threshold = 0.5f; // Medium
-            if (sensitivity.getMode().equals("Low")) {
-                threshold = 0.7f; // Need 70% suspicion
-            } else if (sensitivity.getMode().equals("High")) {
-                threshold = 0.3f; // Need 30% suspicion
-            }
-            
-            // Mark as bot if suspicion exceeds threshold
-            if (maxScore > 0 && (float) suspicionScore / maxScore >= threshold) {
-                detectedBots.add(uuid);
-                if (logDetections.getValue()) {
-                    logger.warn("CONFIRMED BOT: " + player.getName() + " (Score: " + suspicionScore + "/" + maxScore + ")");
-                }
-            }
-        }
-        
-        // Cleanup old data
-        cleanupOldData();
     }
 
     /**
@@ -267,6 +285,31 @@ public class AntiBotMod extends Module {
     }
 
     /**
+     * Checks for suspicious rotation patterns (Watchdog bots).
+     */
+    private boolean hasSuspiciousRotation(EntityPlayer player) {
+        UUID uuid = player.getUniqueID();
+        float currentYaw = player.rotationYaw;
+        float currentPitch = player.rotationPitch;
+        
+        if (Math.abs(currentPitch) > 90.0f) return true; // Invalid pitch
+
+        if (lastYaw.containsKey(uuid)) {
+            float diff = Math.abs(currentYaw - lastYaw.get(uuid));
+            // Check for large consistent yaw changes (spinning)
+            if (diff > 40.0f && diff < 300.0f) {
+                int erraticCount = erraticRotations.getOrDefault(uuid, 0) + 1;
+                erraticRotations.put(uuid, erraticCount);
+                if (erraticCount > 10) return true; // Spun 10+ times quickly
+            } else {
+                erraticRotations.put(uuid, 0); // Reset if normal
+            }
+        }
+        lastYaw.put(uuid, currentYaw);
+        return false;
+    }
+
+    /**
      * Cleans up old tracking data.
      */
     private void cleanupOldData() {
@@ -283,6 +326,8 @@ public class AntiBotMod extends Module {
             }
         }
         entityIds.keySet().retainAll(currentPlayers);
+        lastYaw.keySet().retainAll(currentPlayers);
+        erraticRotations.keySet().retainAll(currentPlayers);
         detectedBots.retainAll(currentPlayers);
     }
 
@@ -337,6 +382,8 @@ public class AntiBotMod extends Module {
         detectedBots.clear();
         spawnTimes.clear();
         entityIds.clear();
+        lastYaw.clear();
+        erraticRotations.clear();
         spawnBurst = 0;
         lastSpawnTime = 0;
     }

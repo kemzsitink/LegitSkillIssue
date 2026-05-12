@@ -2,7 +2,7 @@
 {
   "modid": "legitskillissue",
   "name": "LegitSkillIssue",
-  "description": "A reach mod converted to Forge 1.8.9.",
+  "description": "Advanced Minecraft utility client for Forge 1.8.9 with modular architecture, high-performance event bus, and modern ClickGUI.",
   "version": "${version}",
   "mcversion": "${mcversion}",
   "url": "",

@@ -1,5 +1,8 @@
 package com.client.legitskillissue.module.impl.combat;
 
+import com.client.legitskillissue.event.EventTarget;
+import com.client.legitskillissue.event.impl.EventUpdate;
+
 import com.client.legitskillissue.module.Category;
 import com.client.legitskillissue.module.Module;
 import net.minecraft.client.settings.KeyBinding;
@@ -12,19 +15,21 @@ public class WTapMod extends Module {
 
     public WTapMod() { super("WTap", Category.COMBAT); }
 
-    @Override
-    public void onTick() {
-        if (!tapping) return;
-        ticks++;
-        if (ticks == 2) {
-            KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
-            mc.thePlayer.setSprinting(false);
-        } else if (ticks == 3) {
-            KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), true);
-            mc.thePlayer.setSprinting(true);
-            tapping = false;
-            ticks = 0;
-        }
+    @EventTarget
+    public void onUpdate(EventUpdate event) {
+        if (event.isPre()) {    
+            if (!tapping) return;
+            ticks++;
+            if (ticks == 2) {
+                KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
+                mc.thePlayer.setSprinting(false);
+            } else if (ticks == 3) {
+                KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), true);
+                mc.thePlayer.setSprinting(true);
+                tapping = false;
+                ticks = 0;
+            }
+                }
     }
 
     @Override

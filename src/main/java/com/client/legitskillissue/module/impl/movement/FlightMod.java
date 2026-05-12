@@ -7,6 +7,7 @@ import com.client.legitskillissue.module.Module;
 import com.client.legitskillissue.module.setting.ModeSetting;
 import com.client.legitskillissue.module.setting.NumberSetting;
 import com.client.legitskillissue.utils.MovementUtils;
+import net.minecraft.network.play.client.C03PacketPlayer;
 
 /**
  * REFACTORED: Flight (Advanced/Bypass)
@@ -17,12 +18,20 @@ import com.client.legitskillissue.utils.MovementUtils;
  */
 public class FlightMod extends Module {
 
-    public final ModeSetting mode = addSetting(new ModeSetting("Mode", "Flight mode", "Motion", "Vanilla"));
+    public final ModeSetting mode = addSetting(new ModeSetting("Mode", "Flight mode", "Motion", "Vanilla", "Damage", "Collision"));
     public final NumberSetting speed = addSetting(new NumberSetting("Speed", "Flight Speed", 0.1f, 5.0f, 0.1f, 1.0f));
     public final NumberSetting vSpeed = addSetting(new NumberSetting("Vertical", "Vertical Speed", 0.1f, 2.0f, 0.1f, 0.5f));
 
     public FlightMod() {
         super("Flight", Category.MOVEMENT);
+    }
+
+    @Override
+    protected void onEnable() {
+        if (mc.thePlayer == null) return;
+        if (mode.getMode().equals("Damage")) {
+            damagePlayer();
+        }
     }
 
     @Override
@@ -34,15 +43,23 @@ public class FlightMod extends Module {
 
     @EventTarget
     public void onUpdate(EventUpdate event) {
-        if (mc.thePlayer == null || !event.isPre) return;
+        if (mc.thePlayer == null || !event.isPre()) return;
 
-        if (mode.getMode().equalsIgnoreCase("Vanilla")) {
+        String currentMode = mode.getMode();
+
+        if (currentMode.equalsIgnoreCase("Vanilla")) {
             mc.thePlayer.capabilities.isFlying = true;
             return;
         }
 
         mc.thePlayer.capabilities.isFlying = false;
-        mc.thePlayer.motionY = 0;
+
+        if (currentMode.equalsIgnoreCase("Collision")) {
+            mc.thePlayer.onGround = true;
+            mc.thePlayer.motionY = 0.0;
+        } else {
+            mc.thePlayer.motionY = 0;
+        }
 
         if (mc.gameSettings.keyBindJump.isKeyDown()) {
             mc.thePlayer.motionY += vSpeed.getValue();
@@ -67,5 +84,16 @@ public class FlightMod extends Module {
             mc.thePlayer.motionX *= MovementUtils.HORIZONTAL_FRICTION;
             mc.thePlayer.motionZ *= MovementUtils.HORIZONTAL_FRICTION;
         }
+    }
+
+    private void damagePlayer() {
+        double x = mc.thePlayer.posX;
+        double y = mc.thePlayer.posY;
+        double z = mc.thePlayer.posZ;
+        for (int i = 0; i < 65; i++) {
+            mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(x, y + 0.049, z, false));
+            mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(x, y, z, false));
+        }
+        mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(x, y, z, true));
     }
 }
