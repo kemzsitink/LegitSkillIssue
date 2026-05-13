@@ -51,8 +51,8 @@ public final class NumberSettingComponent extends SettingComponent<NumberSetting
         sliderBg.addChild(handle);
 
         java.util.function.BiConsumer<Float, Float> updateSlider = (mouseX, mouseY) -> {
-            float mouseRelX = mouseX - sliderBg.getLeft();
-            float newPercent = Math.max(0f, Math.min(1f, mouseRelX / sliderBg.getWidth()));
+            float mouseRelX = mouseX - this.getLeft();
+            float newPercent = Math.max(0f, Math.min(1f, mouseRelX / this.getWidth()));
             double newVal = setting.getMin() + (newPercent * (setting.getMax() - setting.getMin()));
             setting.setValue(Math.round(newVal * 10.0) / 10.0);
             
@@ -61,7 +61,7 @@ public final class NumberSettingComponent extends SettingComponent<NumberSetting
             valueText.setText(String.valueOf(setting.getValue()));
         };
 
-        sliderBg.onMouseClick(new Function2<UIComponent, UIClickEvent, Unit>() {
+        this.onMouseClick(new Function2<UIComponent, UIClickEvent, Unit>() {
             @Override
             public Unit invoke(UIComponent c, UIClickEvent e) {
                 e.stopPropagation();
@@ -70,11 +70,14 @@ public final class NumberSettingComponent extends SettingComponent<NumberSetting
             }
         });
 
-        sliderBg.onMouseDrag(new Function4<UIComponent, Float, Float, Integer, Unit>() {
+        this.onMouseDrag(new Function4<UIComponent, Float, Float, Integer, Unit>() {
             @Override
             public Unit invoke(UIComponent c, Float x, Float y, Integer b) {
-                // x and y are relative to c (sliderBg). updateSlider expects absolute coords.
-                updateSlider.accept(c.getLeft() + x, c.getTop() + y);
+                // To avoid relative coordinate jumps when dragging child components (like the handle),
+                // we bypass Elementa's relative drag x/y and fetch the absolute screen mouse X directly.
+                double scale = gg.essential.universal.UMinecraft.getMinecraft().getWindow().getScaleFactor();
+                float absoluteX = (float) (gg.essential.universal.UMinecraft.getMinecraft().mouse.getX() / scale);
+                updateSlider.accept(absoluteX, 0f);
                 return Unit.INSTANCE;
             }
         });
