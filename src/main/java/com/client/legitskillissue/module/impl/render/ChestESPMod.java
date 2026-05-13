@@ -24,7 +24,7 @@ public class ChestESPMod extends Module {
 
     @EventTarget
     public void onRender(EventRender3D event) {
-        if (mc.theWorld == null || mc.thePlayer == null) return;
+        if (mc.theWorld == null || mc.thePlayer == null || mc.theWorld.loadedTileEntityList.isEmpty()) return;
 
         GlStateManager.pushMatrix();
         GlStateManager.disableDepth();
@@ -41,28 +41,37 @@ public class ChestESPMod extends Module {
         double renderPosY = mc.getRenderManager().viewerPosY;
         double renderPosZ = mc.getRenderManager().viewerPosZ;
 
+        // Pass 1: Draw Boxes (Quads)
+        wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
         for (Object obj : mc.theWorld.loadedTileEntityList) {
             if (obj instanceof TileEntityChest || obj instanceof TileEntityEnderChest) {
                 BlockPos pos = ((net.minecraft.tileentity.TileEntity) obj).getPos();
                 double x = pos.getX() - renderPosX;
                 double y = pos.getY() - renderPosY;
                 double z = pos.getZ() - renderPosZ;
-
-                // Typical chest size in 1.8.9 is slightly smaller than a full block (14/16 x 14/16 x 14/16)
                 AxisAlignedBB bb = new AxisAlignedBB(x + 0.0625, y, z + 0.0625, x + 0.9375, y + 0.875, z + 0.9375);
                 
-                Color c = (obj instanceof TileEntityEnderChest) ? new Color(200, 0, 255) : new Color(255, 150, 0);
-                float r = c.getRed() / 255.0f;
-                float g = c.getGreen() / 255.0f;
-                float b = c.getBlue() / 255.0f;
-
-                GlStateManager.color(r, g, b, 0.25f);
-                drawBox(wr, bb);
-                
-                GlStateManager.color(r, g, b, 1.0f);
-                drawOutline(wr, bb);
+                Color c = (obj instanceof TileEntityEnderChest) ? new Color(200, 0, 255, 60) : new Color(255, 150, 0, 60);
+                addBoxToBatch(wr, bb, c);
             }
         }
+        tess.draw();
+
+        // Pass 2: Draw Outlines (Lines)
+        wr.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
+        for (Object obj : mc.theWorld.loadedTileEntityList) {
+            if (obj instanceof TileEntityChest || obj instanceof TileEntityEnderChest) {
+                BlockPos pos = ((net.minecraft.tileentity.TileEntity) obj).getPos();
+                double x = pos.getX() - renderPosX;
+                double y = pos.getY() - renderPosY;
+                double z = pos.getZ() - renderPosZ;
+                AxisAlignedBB bb = new AxisAlignedBB(x + 0.0625, y, z + 0.0625, x + 0.9375, y + 0.875, z + 0.9375);
+                
+                Color c = (obj instanceof TileEntityEnderChest) ? new Color(200, 0, 255, 255) : new Color(255, 150, 0, 255);
+                addOutlineToBatch(wr, bb, c);
+            }
+        }
+        tess.draw();
 
         GlStateManager.enableLighting();
         GlStateManager.disableBlend();
@@ -71,57 +80,50 @@ public class ChestESPMod extends Module {
         GlStateManager.popMatrix();
     }
     
-    private void drawBox(WorldRenderer wr, AxisAlignedBB bb) {
-        wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION);
-        wr.pos(bb.minX, bb.minY, bb.minZ).endVertex();
-        wr.pos(bb.maxX, bb.minY, bb.minZ).endVertex();
-        wr.pos(bb.maxX, bb.minY, bb.maxZ).endVertex();
-        wr.pos(bb.minX, bb.minY, bb.maxZ).endVertex();
-        wr.pos(bb.minX, bb.maxY, bb.minZ).endVertex();
-        wr.pos(bb.minX, bb.maxY, bb.maxZ).endVertex();
-        wr.pos(bb.maxX, bb.maxY, bb.maxZ).endVertex();
-        wr.pos(bb.maxX, bb.maxY, bb.minZ).endVertex();
-        wr.pos(bb.minX, bb.minY, bb.minZ).endVertex();
-        wr.pos(bb.minX, bb.maxY, bb.minZ).endVertex();
-        wr.pos(bb.maxX, bb.maxY, bb.minZ).endVertex();
-        wr.pos(bb.maxX, bb.minY, bb.minZ).endVertex();
-        wr.pos(bb.maxX, bb.minY, bb.minZ).endVertex();
-        wr.pos(bb.maxX, bb.maxY, bb.minZ).endVertex();
-        wr.pos(bb.maxX, bb.maxY, bb.maxZ).endVertex();
-        wr.pos(bb.maxX, bb.minY, bb.maxZ).endVertex();
-        wr.pos(bb.minX, bb.minY, bb.maxZ).endVertex();
-        wr.pos(bb.maxX, bb.minY, bb.maxZ).endVertex();
-        wr.pos(bb.maxX, bb.maxY, bb.maxZ).endVertex();
-        wr.pos(bb.minX, bb.maxY, bb.maxZ).endVertex();
-        wr.pos(bb.minX, bb.maxY, bb.maxZ).endVertex();
-        wr.pos(bb.minX, bb.maxY, bb.minZ).endVertex();
-        wr.pos(bb.minX, bb.minY, bb.minZ).endVertex();
-        wr.pos(bb.minX, bb.minY, bb.maxZ).endVertex();
-        Tessellator.getInstance().draw();
+    private void addBoxToBatch(WorldRenderer wr, AxisAlignedBB bb, Color c) {
+        int r = c.getRed(), g = c.getGreen(), b = c.getBlue(), a = c.getAlpha();
+        wr.pos(bb.minX, bb.minY, bb.minZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.maxX, bb.minY, bb.minZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.maxX, bb.minY, bb.maxZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.minX, bb.minY, bb.maxZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.minX, bb.maxY, bb.minZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.minX, bb.maxY, bb.maxZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.maxX, bb.maxY, bb.maxZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.maxX, bb.maxY, bb.minZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.minX, bb.minY, bb.minZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.minX, bb.maxY, bb.minZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.maxX, bb.maxY, bb.minZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.maxX, bb.minY, bb.minZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.maxX, bb.minY, bb.minZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.maxX, bb.maxY, bb.minZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.maxX, bb.maxY, bb.maxZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.maxX, bb.minY, bb.maxZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.minX, bb.minY, bb.maxZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.maxX, bb.minY, bb.maxZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.maxX, bb.maxY, bb.maxZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.minX, bb.maxY, bb.maxZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.minX, bb.maxY, bb.maxZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.minX, bb.maxY, bb.minZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.minX, bb.minY, bb.minZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.minX, bb.minY, bb.maxZ).color(r, g, b, a).endVertex();
     }
     
-    private void drawOutline(WorldRenderer wr, AxisAlignedBB bb) {
-        wr.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION);
-        wr.pos(bb.minX, bb.minY, bb.minZ).endVertex();
-        wr.pos(bb.maxX, bb.minY, bb.minZ).endVertex();
-        wr.pos(bb.maxX, bb.minY, bb.maxZ).endVertex();
-        wr.pos(bb.minX, bb.minY, bb.maxZ).endVertex();
-        wr.pos(bb.minX, bb.minY, bb.minZ).endVertex();
-        Tessellator.getInstance().draw();
-
-        wr.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION);
-        wr.pos(bb.minX, bb.maxY, bb.minZ).endVertex();
-        wr.pos(bb.maxX, bb.maxY, bb.minZ).endVertex();
-        wr.pos(bb.maxX, bb.maxY, bb.maxZ).endVertex();
-        wr.pos(bb.minX, bb.maxY, bb.maxZ).endVertex();
-        wr.pos(bb.minX, bb.maxY, bb.minZ).endVertex();
-        Tessellator.getInstance().draw();
-
-        wr.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION);
-        wr.pos(bb.minX, bb.minY, bb.minZ).endVertex(); wr.pos(bb.minX, bb.maxY, bb.minZ).endVertex();
-        wr.pos(bb.maxX, bb.minY, bb.minZ).endVertex(); wr.pos(bb.maxX, bb.maxY, bb.minZ).endVertex();
-        wr.pos(bb.maxX, bb.minY, bb.maxZ).endVertex(); wr.pos(bb.maxX, bb.maxY, bb.maxZ).endVertex();
-        wr.pos(bb.minX, bb.minY, bb.maxZ).endVertex(); wr.pos(bb.minX, bb.maxY, bb.maxZ).endVertex();
-        Tessellator.getInstance().draw();
+    private void addOutlineToBatch(WorldRenderer wr, AxisAlignedBB bb, Color c) {
+        int r = c.getRed(), g = c.getGreen(), b = c.getBlue(), a = c.getAlpha();
+        // Bottom
+        wr.pos(bb.minX, bb.minY, bb.minZ).color(r, g, b, a).endVertex(); wr.pos(bb.maxX, bb.minY, bb.minZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.maxX, bb.minY, bb.minZ).color(r, g, b, a).endVertex(); wr.pos(bb.maxX, bb.minY, bb.maxZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.maxX, bb.minY, bb.maxZ).color(r, g, b, a).endVertex(); wr.pos(bb.minX, bb.minY, bb.maxZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.minX, bb.minY, bb.maxZ).color(r, g, b, a).endVertex(); wr.pos(bb.minX, bb.minY, bb.minZ).color(r, g, b, a).endVertex();
+        // Top
+        wr.pos(bb.minX, bb.maxY, bb.minZ).color(r, g, b, a).endVertex(); wr.pos(bb.maxX, bb.maxY, bb.minZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.maxX, bb.maxY, bb.minZ).color(r, g, b, a).endVertex(); wr.pos(bb.maxX, bb.maxY, bb.maxZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.maxX, bb.maxY, bb.maxZ).color(r, g, b, a).endVertex(); wr.pos(bb.minX, bb.maxY, bb.maxZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.minX, bb.maxY, bb.maxZ).color(r, g, b, a).endVertex(); wr.pos(bb.minX, bb.maxY, bb.minZ).color(r, g, b, a).endVertex();
+        // Verticals
+        wr.pos(bb.minX, bb.minY, bb.minZ).color(r, g, b, a).endVertex(); wr.pos(bb.minX, bb.maxY, bb.minZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.maxX, bb.minY, bb.minZ).color(r, g, b, a).endVertex(); wr.pos(bb.maxX, bb.maxY, bb.minZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.maxX, bb.minY, bb.maxZ).color(r, g, b, a).endVertex(); wr.pos(bb.maxX, bb.maxY, bb.maxZ).color(r, g, b, a).endVertex();
+        wr.pos(bb.minX, bb.minY, bb.maxZ).color(r, g, b, a).endVertex(); wr.pos(bb.minX, bb.maxY, bb.maxZ).color(r, g, b, a).endVertex();
     }
 }

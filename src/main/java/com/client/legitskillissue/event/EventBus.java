@@ -38,10 +38,10 @@ public class EventBus {
                     
                     BiConsumer<Object, Object> lambda = (BiConsumer<Object, Object>) callSite.getTarget().invokeExact();
                     
-                    registry.computeIfAbsent(eventClass, k -> new CopyOnWriteArrayList<>())
+                    registry.computeIfAbsent(eventClass, k -> new ArrayList<>())
                             .add(new Handler(obj, lambda, m.getAnnotation(EventTarget.class).priority()));
                     
-                    registry.get(eventClass).sort(Comparator.comparingInt(h -> -h.priority));
+                    registry.get(eventClass).sort(Comparator.comparingInt(h -> h.priority));
                 } catch (Throwable t) {
                     t.printStackTrace();
                 }

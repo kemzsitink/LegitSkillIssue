@@ -45,6 +45,7 @@ public class KillAura2XMod extends Module {
     private boolean isRotating;
     private long lastAttackTime;
     private final Random random = new Random();
+    private boolean sending;
 
     public KillAura2XMod() {
         super("KillAura2X", Category.COMBAT);
@@ -54,6 +55,7 @@ public class KillAura2XMod extends Module {
     protected void onDisable() {
         currentTarget = null;
         isRotating = false;
+        sending = false;
     }
 
     @EventTarget
@@ -98,27 +100,22 @@ public class KillAura2XMod extends Module {
 
     @EventTarget
     public void onPacket(EventPacket event) {
-        if (event.isSend && isRotating && silent.getValue() && event.getPacket() instanceof C03PacketPlayer) {
-            C03PacketPlayer packet = (C03PacketPlayer) event.getPacket();
-            if (packet.getRotating()) {
-                // If the packet already has rotations, we override them with our silent rotations
-                // We use reflection to set private fields if necessary, or just rely on constructor if possible.
-                // In C03PacketPlayer, yaw/pitch are set in subclasses C05/C06.
-                if (packet instanceof C03PacketPlayer.C05PacketPlayerLook || packet instanceof C03PacketPlayer.C06PacketPlayerPosLook) {
-                    // In a senior implementation, we'd use a custom PacketHandler or Mixin to inject.
-                    // For now, we'll assume we can use the constructor approach by canceling and re-sending.
-                    event.setCancelled(true);
-                    if (packet instanceof C03PacketPlayer.C06PacketPlayerPosLook) {
-                        mc.getNetHandler().getNetworkManager().sendPacket(new C03PacketPlayer.C06PacketPlayerPosLook(
-                            packet.getPositionX(), packet.getPositionY(), packet.getPositionZ(), serverYaw, serverPitch, packet.isOnGround()
-                        ));
-                    } else {
-                        mc.getNetHandler().getNetworkManager().sendPacket(new C03PacketPlayer.C05PacketPlayerLook(
-                            serverYaw, serverPitch, packet.isOnGround()
-                        ));
-                    }
-                }
+        if (sending || !event.isSend || !isRotating || !silent.getValue() || !(event.getPacket() instanceof C03PacketPlayer)) return;
+
+        C03PacketPlayer packet = (C03PacketPlayer) event.getPacket();
+        if (packet.getRotating()) {
+            event.setCancelled(true);
+            sending = true;
+            if (packet instanceof C03PacketPlayer.C06PacketPlayerPosLook) {
+                mc.getNetHandler().getNetworkManager().sendPacket(new C03PacketPlayer.C06PacketPlayerPosLook(
+                    packet.getPositionX(), packet.getPositionY(), packet.getPositionZ(), serverYaw, serverPitch, packet.isOnGround()
+                ));
+            } else {
+                mc.getNetHandler().getNetworkManager().sendPacket(new C03PacketPlayer.C05PacketPlayerLook(
+                    serverYaw, serverPitch, packet.isOnGround()
+                ));
             }
+            sending = false;
         }
     }
 

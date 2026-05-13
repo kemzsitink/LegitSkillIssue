@@ -23,7 +23,7 @@ public class TracersMod extends Module {
 
     @EventTarget
     public void onRender(EventRender3D event) {
-        if (mc.theWorld == null || mc.thePlayer == null) return;
+        if (mc.theWorld == null || mc.thePlayer == null || mc.theWorld.playerEntities.isEmpty()) return;
 
         float pt = event.getPartialTicks();
 
@@ -47,6 +47,9 @@ public class TracersMod extends Module {
         double renderPosY = mc.getRenderManager().viewerPosY;
         double renderPosZ = mc.getRenderManager().viewerPosZ;
 
+        // Batch start
+        wr.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
+
         for (EntityPlayer p : mc.theWorld.playerEntities) {
             if (p == mc.thePlayer || p.isDead || p.isInvisible()) continue;
 
@@ -61,17 +64,14 @@ public class TracersMod extends Module {
             if (isFriend) color = new Color(50, 50, 255); // Blue (Friend)
             else if (sameTeam) color = new Color(50, 255, 50); // Green (Team)
 
-            float r = color.getRed() / 255.0f;
-            float g = color.getGreen() / 255.0f;
-            float b = color.getBlue() / 255.0f;
+            int r = color.getRed(), g = color.getGreen(), b = color.getBlue(), a = color.getAlpha();
 
-            GlStateManager.color(r, g, b, 1.0f);
-
-            wr.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION);
-            wr.pos(eyes.xCoord, eyes.yCoord, eyes.zCoord).endVertex();
-            wr.pos(ex, ey + p.height / 2.0, ez).endVertex();
-            tess.draw();
+            wr.pos(eyes.xCoord, eyes.yCoord, eyes.zCoord).color(r, g, b, a).endVertex();
+            wr.pos(ex, ey + p.height / 2.0, ez).color(r, g, b, a).endVertex();
         }
+        
+        // Batch end
+        tess.draw();
 
         GL11.glDisable(GL11.GL_LINE_SMOOTH);
         GlStateManager.enableDepth();

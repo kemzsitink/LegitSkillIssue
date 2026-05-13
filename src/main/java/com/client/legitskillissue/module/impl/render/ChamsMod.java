@@ -32,7 +32,11 @@ public class ChamsMod extends Module {
     @SubscribeEvent
     public void onRenderPre(RenderLivingEvent.Pre event) {
         if (!isEnabled() || !(event.entity instanceof EntityPlayer) || event.entity == mc.thePlayer) return;
-        GL11.glDisable(GL11.GL_DEPTH_TEST);
+        
+        net.minecraft.client.renderer.GlStateManager.pushMatrix();
+        net.minecraft.client.renderer.GlStateManager.disableDepth();
+        net.minecraft.client.renderer.GlStateManager.disableTexture2D();
+        
         boolean sameTeam = mc.thePlayer.getTeam() != null && mc.thePlayer.getTeam().equals(event.entity.getTeam());
         if (sameTeam) GL11.glColor4f(0.2f, 1.0f, 0.2f, 0.6f);
         else          GL11.glColor4f(1.0f, 0.2f, 0.2f, 0.6f);
@@ -40,8 +44,12 @@ public class ChamsMod extends Module {
 
     @SubscribeEvent
     public void onRenderPost(RenderLivingEvent.Post event) {
-        if (!isEnabled() || !(event.entity instanceof EntityPlayer) || event.entity == mc.thePlayer) return;
-        GL11.glEnable(GL11.GL_DEPTH_TEST);
-        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+        // ALWAYS restore states if we might have changed them (check type and identity)
+        if (!(event.entity instanceof EntityPlayer) || event.entity == mc.thePlayer) return;
+
+        net.minecraft.client.renderer.GlStateManager.enableDepth();
+        net.minecraft.client.renderer.GlStateManager.enableTexture2D();
+        net.minecraft.client.renderer.GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
+        net.minecraft.client.renderer.GlStateManager.popMatrix();
     }
 }

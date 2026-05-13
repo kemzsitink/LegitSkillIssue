@@ -32,6 +32,7 @@ public class ScaffoldMod extends Module {
     private float currentYaw, currentPitch;
     private int delayTimer;
     private boolean isSpoofing;
+    private boolean sending;
 
     public ScaffoldMod() {
         super("Scaffold", Category.MISC);
@@ -42,10 +43,17 @@ public class ScaffoldMod extends Module {
         currentBlockData = null;
         delayTimer = 0;
         isSpoofing = false;
+        sending = false;
         if (mc.thePlayer != null) {
             currentYaw = mc.thePlayer.rotationYaw;
             currentPitch = mc.thePlayer.rotationPitch;
         }
+    }
+
+    @Override
+    protected void onDisable() {
+        sending = false;
+        isSpoofing = false;
     }
 
     @EventTarget
@@ -118,21 +126,22 @@ public class ScaffoldMod extends Module {
 
     @EventTarget
     public void onPacketEvent(EventPacket event) {
-        if (!event.isSend || !isSpoofing) return;
+        if (sending || !event.isSend || !isSpoofing) return;
         if (event.getPacket() instanceof C03PacketPlayer) {
             C03PacketPlayer packet = (C03PacketPlayer) event.getPacket();
+            event.setCancelled(true);
+            sending = true;
             if (packet.isMoving()) {
-                event.setCancelled(true);
                 mc.getNetHandler().getNetworkManager().sendPacket(new C03PacketPlayer.C06PacketPlayerPosLook(
                     packet.getPositionX(), packet.getPositionY(), packet.getPositionZ(), 
                     currentYaw, currentPitch, packet.isOnGround()
                 ));
             } else {
-                event.setCancelled(true);
                 mc.getNetHandler().getNetworkManager().sendPacket(new C03PacketPlayer.C05PacketPlayerLook(
                     currentYaw, currentPitch, packet.isOnGround()
                 ));
             }
+            sending = false;
         }
     }
 
