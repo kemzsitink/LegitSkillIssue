@@ -8,6 +8,7 @@ import com.client.legitskillissue.module.Module;
 import com.client.legitskillissue.module.setting.NumberSetting;
 import com.client.legitskillissue.module.setting.ModeSetting;
 import com.client.legitskillissue.module.setting.BooleanSetting;
+import com.client.legitskillissue.module.impl.misc.AntiBotMod;
 import com.client.legitskillissue.utils.MovementUtils;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.play.client.C03PacketPlayer;

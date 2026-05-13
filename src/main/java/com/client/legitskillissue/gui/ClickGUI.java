@@ -7,20 +7,14 @@ import com.client.legitskillissue.utils.RenderUtils;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
 import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 
 import java.awt.Color;
 import java.io.IOException;
 import java.util.ArrayList;
 
 /**
- * REFACTORED: Enhanced ClickGUI with search, tooltips, and better UX.
- * 
- * IMPROVEMENTS:
- * - Search bar for quick module access
- * - Tooltips showing module descriptions and keybinds
- * - Smooth animations
- * - Better visual feedback
- * - Keyboard navigation support
+ * REFACTORED: Enhanced ClickGUI with search, tooltips, scrolling and better UX.
  */
 public class ClickGUI extends GuiScreen {
     private final ArrayList<Panel> panels = new ArrayList<>();
@@ -47,6 +41,17 @@ public class ClickGUI extends GuiScreen {
         for (Category category : Category.values()) {
             panels.add(new Panel(category, x, 20, 115));
             x += 125;
+        }
+    }
+
+    @Override
+    public void handleMouseInput() throws IOException {
+        super.handleMouseInput();
+        int dWheel = Mouse.getEventDWheel();
+        if (dWheel != 0) {
+            for (Panel panel : panels) {
+                panel.handleScroll(dWheel);
+            }
         }
     }
 

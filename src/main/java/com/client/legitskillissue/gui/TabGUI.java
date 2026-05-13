@@ -22,6 +22,8 @@ public class TabGUI {
     public static TabGUI INSTANCE;
     private int currentCategoryIndex = 0;
     private int currentModuleIndex = 0;
+    private int scrollOffset = 0;
+    private final int maxVisibleItems = 12;
     private boolean extended = false;
 
     private final Category[] categories = Category.values();
@@ -37,13 +39,13 @@ public class TabGUI {
 
         int x = 5;
         int y = 20; // Below watermark
-        int width = 70;
+        int width = 75;
         int height = 14;
 
         // Draw Categories
         for (int i = 0; i < categories.length; i++) {
             boolean selected = (i == currentCategoryIndex);
-            int bgColor = selected ? new Color(0, 120, 255, 200).getRGB() : new Color(20, 20, 20, 150).getRGB();
+            int bgColor = selected ? new Color(0, 120, 255, 220).getRGB() : new Color(10, 10, 15, 180).getRGB();
             
             RenderUtils.drawRect(x, y + (i * height), x + width, y + ((i + 1) * height), bgColor);
             Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(categories[i].getName(), x + 5, y + (i * height) + 3, -1);
@@ -52,17 +54,37 @@ public class TabGUI {
             if (selected && extended) {
                 List<Module> modules = getModulesForCategory(categories[i]);
                 int moduleX = x + width + 2;
-                int moduleWidth = 80;
+                int moduleWidth = 90;
+                
+                int visibleCount = Math.min(modules.size(), maxVisibleItems);
+                
+                // Adjust scrollOffset to keep currentModuleIndex visible
+                if (currentModuleIndex < scrollOffset) {
+                    scrollOffset = currentModuleIndex;
+                } else if (currentModuleIndex >= scrollOffset + maxVisibleItems) {
+                    scrollOffset = currentModuleIndex - maxVisibleItems + 1;
+                }
 
-                for (int j = 0; j < modules.size(); j++) {
-                    Module m = modules.get(j);
-                    boolean moduleSelected = (j == currentModuleIndex);
+                for (int j = 0; j < visibleCount; j++) {
+                    int actualIndex = j + scrollOffset;
+                    if (actualIndex >= modules.size()) break;
                     
-                    int mBgColor = moduleSelected ? new Color(0, 120, 255, 200).getRGB() : new Color(20, 20, 20, 150).getRGB();
-                    int textColor = m.isEnabled() ? new Color(0, 255, 0).getRGB() : -1;
+                    Module m = modules.get(actualIndex);
+                    boolean moduleSelected = (actualIndex == currentModuleIndex);
+                    
+                    int mBgColor = moduleSelected ? new Color(0, 120, 255, 220).getRGB() : new Color(10, 10, 15, 180).getRGB();
+                    int textColor = m.isEnabled() ? new Color(80, 255, 120).getRGB() : -1;
 
                     RenderUtils.drawRect(moduleX, y + (j * height), moduleX + moduleWidth, y + ((j + 1) * height), mBgColor);
                     Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(m.getName(), moduleX + 5, y + (j * height) + 3, textColor);
+                }
+                
+                // Scroll indicators
+                if (scrollOffset > 0) {
+                    RenderUtils.drawRect(moduleX, y, moduleX + moduleWidth, y + 1, new Color(255, 255, 255, 100).getRGB());
+                }
+                if (scrollOffset + maxVisibleItems < modules.size()) {
+                    RenderUtils.drawRect(moduleX, y + (visibleCount * height) - 1, moduleX + moduleWidth, y + (visibleCount * height), new Color(255, 255, 255, 100).getRGB());
                 }
             }
         }
@@ -83,6 +105,7 @@ public class TabGUI {
                 case Keyboard.KEY_LEFT:
                     extended = false;
                     currentModuleIndex = 0;
+                    scrollOffset = 0;
                     break;
                 case Keyboard.KEY_RIGHT:
                 case Keyboard.KEY_RETURN:
@@ -106,6 +129,7 @@ public class TabGUI {
                     if (!getModulesForCategory(categories[currentCategoryIndex]).isEmpty()) {
                         extended = true;
                         currentModuleIndex = 0;
+                        scrollOffset = 0;
                     }
                     break;
             }

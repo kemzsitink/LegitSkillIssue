@@ -7,11 +7,13 @@ import com.client.legitskillissue.module.Module;
 import com.client.legitskillissue.module.ModuleManager;
 import com.client.legitskillissue.utils.RenderUtils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.ScaledResolution;
+import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;
 
 /**
- * REFACTORED: Panel with search filtering and smooth animations.
+ * REFACTORED: Panel with search filtering, smooth animations, and scrolling.
  */
 public class Panel extends Component {
     public Category category;
@@ -19,6 +21,10 @@ public class Panel extends Component {
     public int dragX, dragY;
     private final ArrayList<ModuleButton> buttons = new ArrayList<>();
     private String searchQuery = "";
+    
+    // Scrolling
+    public int scrollY = 0;
+    private final int maxVisibleHeight = 200;
     
     // Animations
     private final Animation openAnimation;
@@ -61,7 +67,6 @@ public class Panel extends Component {
             category.getName(), x + 8, y + 6, ClickGUI.ACCENT.getRGB());
         
         // Arrow indicator (animated)
-        float arrowRotation = openProgress * 90; // 0° to 90°
         String arrow = open ? "v" : ">";
         Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(
             arrow, x + width - 15, y + 6, -1);
@@ -75,11 +80,29 @@ public class Panel extends Component {
                 countText, x + width - 25 - countW, y + 6, ClickGUI.TEXT_DIM.getRGB());
         }
 
-        // Draw modules with animation
+        // Draw modules with animation and scrolling
         if (openProgress > 0.01f) {
-            int buttonY = y + height;
-            int visibleButtons = 0;
+            int buttonY = y + height - scrollY;
+            int totalListHeight = 0;
+            for (ModuleButton mb : buttons) {
+                if (searchQuery.isEmpty() || mb.module.getName().toLowerCase().contains(searchQuery)) {
+                    totalListHeight += mb.getHeight();
+                }
+            }
+
+            // Scissor clipping
+            Minecraft mc = Minecraft.getMinecraft();
+            ScaledResolution sr = new ScaledResolution(mc);
+            int scale = sr.getScaleFactor();
             
+            int scissorX = x * scale;
+            int scissorY = (mc.displayHeight - (y + height + maxVisibleHeight) * scale);
+            int scissorW = width * scale;
+            int scissorH = (int) (maxVisibleHeight * scale * openProgress);
+
+            GL11.glEnable(GL11.GL_SCISSOR_TEST);
+            GL11.glScissor(scissorX, scissorY, scissorW, scissorH);
+
             for (ModuleButton mb : buttons) {
                 // Filter by search
                 if (!searchQuery.isEmpty() && !mb.module.getName().toLowerCase().contains(searchQuery)) {
@@ -91,14 +114,35 @@ public class Panel extends Component {
                 mb.setAlpha(openProgress); // Fade in/out
                 mb.drawScreen(mouseX, mouseY);
                 buttonY += (int) (mb.getHeight() * openProgress);
-                visibleButtons++;
+            }
+
+            GL11.glDisable(GL11.GL_SCISSOR_TEST);
+            
+            // Scrollbar indicator if needed
+            if (totalListHeight > maxVisibleHeight) {
+                float scrollPct = (float) scrollY / (totalListHeight - maxVisibleHeight);
+                int barH = 20;
+                int barY = y + height + (int) ((maxVisibleHeight - barH) * scrollPct);
+                RenderUtils.drawRect(x + width - 2, barY, x + width, barY + barH, ClickGUI.ACCENT.getRGB());
+            }
+        }
+    }
+
+    public void handleScroll(int dWheel) {
+        if (open) {
+            int totalListHeight = 0;
+            for (ModuleButton mb : buttons) {
+                if (searchQuery.isEmpty() || mb.module.getName().toLowerCase().contains(searchQuery)) {
+                    totalListHeight += mb.getHeight();
+                }
             }
             
-            // Bottom shadow
-            if (visibleButtons > 0) {
-                int shadowAlpha = (int) (100 * openProgress);
-                RenderUtils.drawRect(x, buttonY, x + width, buttonY + 1, 
-                    RenderUtils.colorWithAlpha(ClickGUI.BG_DARK, shadowAlpha));
+            if (totalListHeight > maxVisibleHeight) {
+                scrollY -= dWheel / 10;
+                if (scrollY < 0) scrollY = 0;
+                if (scrollY > totalListHeight - maxVisibleHeight) scrollY = totalListHeight - maxVisibleHeight;
+            } else {
+                scrollY = 0;
             }
         }
     }
@@ -118,11 +162,14 @@ public class Panel extends Component {
         }
         
         if (open && openAnimation.getValue() > 0.5f) {
-            for (ModuleButton mb : buttons) {
-                if (!searchQuery.isEmpty() && !mb.module.getName().toLowerCase().contains(searchQuery)) {
-                    continue;
+            // Check if mouse is within visible list bounds for interaction
+            if (mouseX >= x && mouseX <= x + width && mouseY >= y + height && mouseY <= y + height + maxVisibleHeight) {
+                for (ModuleButton mb : buttons) {
+                    if (!searchQuery.isEmpty() && !mb.module.getName().toLowerCase().contains(searchQuery)) {
+                        continue;
+                    }
+                    if (mb.mouseClicked(mouseX, mouseY, mouseButton)) return true;
                 }
-                if (mb.mouseClicked(mouseX, mouseY, mouseButton)) return true;
             }
         }
         return false;
