@@ -52,9 +52,10 @@ public final class ClickGuiScreen extends WindowScreen {
             if (!savedX.containsKey(category)) {
                 xOffset += spacing;
                 // Wrap to next row if too wide
-                if (xOffset + spacing > window.getWidth()) {
+                float screenW = gg.essential.universal.UMinecraft.getMinecraft().getWindow().getScaledWidth();
+                if (xOffset + spacing > screenW && screenW > 0) {
                     xOffset = 20.0f;
-                    yOffset += 100.0f; 
+                    yOffset += 120.0f; 
                 }
             }
         }

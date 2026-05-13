@@ -25,6 +25,8 @@ public final class CategoryPanel extends UIRoundedRectangle {
     private boolean isDragging = false;
     private float dragOffsetX = 0f;
     private float dragOffsetY = 0f;
+    private float scrollOffset = 0f;
+    private float maxScroll = 0f;
     private final UIBlock listContainer;
     private boolean collapsed = false;
     private boolean uncollapsing = false;
@@ -75,6 +77,17 @@ public final class CategoryPanel extends UIRoundedRectangle {
                 return Unit.INSTANCE;
             }
         });
+        
+        listContainer.onMouseScroll(new Function2<UIComponent, gg.essential.elementa.events.UIScrollEvent, Unit>() {
+            @Override
+            public Unit invoke(UIComponent c, gg.essential.elementa.events.UIScrollEvent e) {
+                scrollOffset += (float) e.getDelta() * 20f;
+                if (scrollOffset > 0) scrollOffset = 0;
+                if (scrollOffset < -maxScroll) scrollOffset = -maxScroll;
+                return Unit.INSTANCE;
+            }
+        });
+        
         this.addChild(listContainer);
 
         for (Module m : categoryModules) {
@@ -150,24 +163,30 @@ public final class CategoryPanel extends UIRoundedRectangle {
     public void beforeDraw(UMatrixStack matrixStack) {
         super.beforeDraw(matrixStack);
         
-        float currentY = 0f;
+        float currentY = scrollOffset;
+        float totalHeight = 0f;
         for (UIComponent child : listContainer.getChildren()) {
             child.setY(new PixelConstraint(currentY));
             currentY += child.getHeight();
+            totalHeight += child.getHeight();
         }
         
+        float maxVisibleHeight = 150f;
+        maxScroll = Math.max(0f, totalHeight - maxVisibleHeight);
+        float targetContainerHeight = Math.min(totalHeight, maxVisibleHeight);
+        
         if (!collapsed) {
-            if (targetListHeight != currentY && uncollapsing) {
-                ElementaUtils.animateHeight(listContainer, currentY, 0.4f);
+            if (targetListHeight != targetContainerHeight && uncollapsing) {
+                ElementaUtils.animateHeight(listContainer, targetContainerHeight, 0.4f);
             }
-            targetListHeight = currentY;
+            targetListHeight = targetContainerHeight;
             if (uncollapsing) {
                 if (Math.abs(listContainer.getHeight() - targetListHeight) < 1.5f) {
                     uncollapsing = false;
-                    listContainer.setHeight(new PixelConstraint(currentY));
+                    listContainer.setHeight(new PixelConstraint(targetContainerHeight));
                 }
             } else {
-                listContainer.setHeight(new PixelConstraint(currentY));
+                listContainer.setHeight(new PixelConstraint(targetContainerHeight));
             }
         }
         this.setHeight(new PixelConstraint(GuiConstants.HEADER_HEIGHT + listContainer.getHeight()));
