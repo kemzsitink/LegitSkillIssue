@@ -66,19 +66,81 @@ public class RenderUtils {
     }
 
     /**
-     * Optimized rounded rectangle with proper corner rendering.
+     * Draws a high-quality anti-aliased rounded rectangle.
      */
     public static void drawRoundedRect(float x, float y, float x2, float y2, float radius, int color) {
-        // Main rectangles
-        drawRect(x + radius, y, x2 - radius, y2, color);
-        drawRect(x, y + radius, x + radius, y2 - radius, color);
-        drawRect(x2 - radius, y + radius, x2, y2 - radius, color);
+        float f = (color >> 24 & 0xFF) / 255.0F;
+        float f1 = (color >> 16 & 0xFF) / 255.0F;
+        float f2 = (color >> 8 & 0xFF) / 255.0F;
+        float f3 = (color & 0xFF) / 255.0F;
+
+        GlStateManager.pushMatrix();
+        GlStateManager.enableBlend();
+        GlStateManager.disableTexture2D();
+        GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
+        GL11.glEnable(GL11.GL_LINE_SMOOTH);
+        GL11.glColor4f(f1, f2, f3, f);
         
-        // Corners
-        drawFilledCircle(x + radius, y + radius, radius, color);
-        drawFilledCircle(x2 - radius, y + radius, radius, color);
-        drawFilledCircle(x + radius, y2 - radius, radius, color);
-        drawFilledCircle(x2 - radius, y2 - radius, radius, color);
+        GL11.glBegin(GL11.GL_POLYGON);
+        // Top-Left
+        renderCorner(x + radius, y + radius, radius, 180, 270);
+        // Top-Right
+        renderCorner(x2 - radius, y + radius, radius, 270, 360);
+        // Bottom-Right
+        renderCorner(x2 - radius, y2 - radius, radius, 0, 90);
+        // Bottom-Left
+        renderCorner(x + radius, y2 - radius, radius, 90, 180);
+        GL11.glEnd();
+        
+        GlStateManager.enableTexture2D();
+        GlStateManager.disableBlend();
+        GL11.glDisable(GL11.GL_LINE_SMOOTH);
+        GlStateManager.popMatrix();
+    }
+
+    private static void renderCorner(float x, float y, float radius, int startAngle, int endAngle) {
+        for (int i = startAngle; i <= endAngle; i += 5) {
+            double angle = Math.toRadians(i);
+            GL11.glVertex2d(x + Math.cos(angle) * radius, y + Math.sin(angle) * radius);
+        }
+    }
+
+    /**
+     * Draws a soft, blurred shadow around a rectangle (Fluent style).
+     */
+    public static void drawSoftShadow(float x, float y, float x2, float y2, int shadowSize, int color) {
+        float f = (color >> 24 & 0xFF) / 255.0F;
+        float f1 = (color >> 16 & 0xFF) / 255.0F;
+        float f2 = (color >> 8 & 0xFF) / 255.0F;
+        float f3 = (color & 0xFF) / 255.0F;
+
+        GlStateManager.pushMatrix();
+        GlStateManager.enableBlend();
+        GlStateManager.disableTexture2D();
+        GlStateManager.disableAlpha();
+        GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
+        GL11.glEnable(GL11.GL_LINE_SMOOTH);
+        GL11.glShadeModel(GL11.GL_SMOOTH);
+
+        for (int i = 0; i < shadowSize; i++) {
+            float alpha = f * (1.0f - (float) i / shadowSize) * 0.5f;
+            GL11.glColor4f(f1, f2, f3, alpha);
+            
+            float offset = i;
+            GL11.glBegin(GL11.GL_LINE_LOOP);
+            GL11.glVertex2f(x - offset, y - offset);
+            GL11.glVertex2f(x2 + offset, y - offset);
+            GL11.glVertex2f(x2 + offset, y2 + offset);
+            GL11.glVertex2f(x - offset, y2 + offset);
+            GL11.glEnd();
+        }
+
+        GL11.glShadeModel(GL11.GL_FLAT);
+        GL11.glDisable(GL11.GL_LINE_SMOOTH);
+        GlStateManager.enableAlpha();
+        GlStateManager.enableTexture2D();
+        GlStateManager.disableBlend();
+        GlStateManager.popMatrix();
     }
 
     /**

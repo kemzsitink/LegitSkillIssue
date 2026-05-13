@@ -78,13 +78,14 @@ public abstract class Module {
     }
 
     public void setEnabled(boolean enabled) {
+        if (this.enabled == enabled) return;
         this.enabled = enabled;
         if (enabled) {
             EventBus.INSTANCE.register(this);
-            onEnable(); 
+            if (mc.thePlayer != null) onEnable(); 
         } else {
             EventBus.INSTANCE.unregister(this);
-            onDisable();
+            if (mc.thePlayer != null) onDisable();
         }
         com.client.legitskillissue.utils.ConfigManager.save();
     }

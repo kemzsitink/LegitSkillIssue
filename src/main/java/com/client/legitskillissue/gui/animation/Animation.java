@@ -12,9 +12,10 @@ public class Animation {
 
     public enum EasingFunction {
         LINEAR,
-        EASE_IN_OUT_QUAD,
-        EASE_OUT_CUBIC,
-        EASE_OUT_EXPO
+        QUAD_OUT,
+        CUBIC_OUT,
+        EXPO_OUT,
+        ELASTIC_OUT
     }
 
     public Animation(float initialValue, float speed, EasingFunction easing) {
@@ -25,42 +26,35 @@ public class Animation {
     }
 
     public Animation(float initialValue, float speed) {
-        this(initialValue, speed, EasingFunction.EASE_OUT_CUBIC);
+        this(initialValue, speed, EasingFunction.QUAD_OUT);
     }
 
-    /**
-     * Updates the animation value towards the target.
-     * Call this every frame.
-     */
     public void update() {
-        if (Math.abs(value - target) < 0.001f) {
+        if (isDone()) {
             value = target;
             return;
         }
 
         float delta = target - value;
-        float step;
+        float factor = speed;
 
         switch (easing) {
-            case LINEAR:
-                step = delta * speed;
+            case QUAD_OUT:
+                factor = 1 - (float) Math.pow(1 - speed, 3);
                 break;
-            case EASE_IN_OUT_QUAD:
-                float t = speed;
-                step = delta * (t < 0.5f ? 2 * t * t : -1 + (4 - 2 * t) * t);
+            case CUBIC_OUT:
+                factor = 1 - (float) Math.pow(1 - speed, 4);
                 break;
-            case EASE_OUT_CUBIC:
-                float t2 = 1 - speed;
-                step = delta * (1 - t2 * t2 * t2);
+            case EXPO_OUT:
+                factor = 1 - (float) Math.pow(2, -10 * speed);
                 break;
-            case EASE_OUT_EXPO:
-                step = delta * (1 - (float) Math.pow(2, -10 * speed));
+            case ELASTIC_OUT:
+                double c4 = (2 * Math.PI) / 3;
+                factor = speed == 0 ? 0 : (speed == 1 ? 1 : (float)(Math.pow(2, -10 * speed) * Math.sin((speed * 10 - 0.75) * c4) + 1));
                 break;
-            default:
-                step = delta * speed;
         }
 
-        value += step;
+        value += delta * factor;
     }
 
     /**

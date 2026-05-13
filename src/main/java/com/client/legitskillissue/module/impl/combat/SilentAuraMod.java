@@ -229,6 +229,7 @@ public class SilentAuraMod extends Module {
     }
 
     private boolean isHoldingSword() {
+        if (mc.thePlayer == null) return false;
         return mc.thePlayer.getCurrentEquippedItem() != null && mc.thePlayer.getCurrentEquippedItem().getItem() instanceof ItemSword;
     }
 

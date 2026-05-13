@@ -10,6 +10,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
 import org.lwjgl.opengl.GL11;
 
+import java.awt.Color;
 import java.util.ArrayList;
 
 /**
@@ -54,31 +55,28 @@ public class Panel extends Component {
         openAnimation.update();
         float openProgress = openAnimation.getValue();
 
-        // Header
+        // Header - Modern Shadow & Gradient
         boolean headerHovered = isHovered(mouseX, mouseY);
-        int headerColor = headerHovered ? 
-            RenderUtils.interpolateColor(ClickGUI.BG_DARK.getRGB(), ClickGUI.BG_LIGHT.getRGB(), 0.5f) :
-            ClickGUI.BG_DARK.getRGB();
+        int headerColorTop = ClickGUI.BG_DARK.getRGB();
+        int headerColorBottom = headerHovered ? ClickGUI.BG_LIGHT.getRGB() : ClickGUI.BG_DARK.getRGB();
             
-        RenderUtils.drawRoundedRect(x, y, x + width, y + height, 3, headerColor);
+        // Shadow (only when header is visible or panel is open)
+        RenderUtils.drawSoftShadow(x, y, x + width, y + height + (open ? maxVisibleHeight * openProgress : 0), 10, new Color(0, 0, 0, 150).getRGB());
         
+        // Rounded Header
+        RenderUtils.drawRoundedGradientRect(x, y, x + width, y + height, 4, headerColorTop, headerColorBottom);
+        
+        // Accent line at the bottom of header
+        if (open) RenderUtils.drawRect(x, y + height - 1, x + width, y + height, ClickGUI.ACCENT.getRGB());
+
         // Category name
         Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(
-            category.getName(), x + 8, y + 6, ClickGUI.ACCENT.getRGB());
+            category.getName(), x + 10, y + 6, -1);
         
-        // Arrow indicator (animated)
-        String arrow = open ? "v" : ">";
+        // Arrow indicator (centered vertically)
+        String arrow = open ? "-" : "+";
         Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(
-            arrow, x + width - 15, y + 6, -1);
-
-        // Module count
-        int visibleCount = getVisibleModuleCount();
-        if (visibleCount > 0) {
-            String countText = String.valueOf(visibleCount);
-            int countW = Minecraft.getMinecraft().fontRendererObj.getStringWidth(countText);
-            Minecraft.getMinecraft().fontRendererObj.drawString(
-                countText, x + width - 25 - countW, y + 6, ClickGUI.TEXT_DIM.getRGB());
-        }
+            arrow, x + width - 15, y + 6, ClickGUI.ACCENT.getRGB());
 
         // Draw modules with animation and scrolling
         if (openProgress > 0.01f) {
@@ -103,25 +101,25 @@ public class Panel extends Component {
             GL11.glEnable(GL11.GL_SCISSOR_TEST);
             GL11.glScissor(scissorX, scissorY, scissorW, scissorH);
 
+            // Panel body background
+            RenderUtils.drawRect(x, y + height, x + width, y + height + (maxVisibleHeight * openProgress), ClickGUI.BG_DARK.getRGB());
+
             for (ModuleButton mb : buttons) {
-                // Filter by search
-                if (!searchQuery.isEmpty() && !mb.module.getName().toLowerCase().contains(searchQuery)) {
-                    continue;
-                }
+                if (!searchQuery.isEmpty() && !mb.module.getName().toLowerCase().contains(searchQuery)) continue;
                 
                 mb.x = x;
                 mb.y = buttonY;
-                mb.setAlpha(openProgress); // Fade in/out
+                mb.setAlpha(openProgress);
                 mb.drawScreen(mouseX, mouseY);
                 buttonY += (int) (mb.getHeight() * openProgress);
             }
 
             GL11.glDisable(GL11.GL_SCISSOR_TEST);
             
-            // Scrollbar indicator if needed
+            // Modern Scrollbar
             if (totalListHeight > maxVisibleHeight) {
                 float scrollPct = (float) scrollY / (totalListHeight - maxVisibleHeight);
-                int barH = 20;
+                int barH = (int) (maxVisibleHeight * (maxVisibleHeight / (float) totalListHeight));
                 int barY = y + height + (int) ((maxVisibleHeight - barH) * scrollPct);
                 RenderUtils.drawRect(x + width - 2, barY, x + width, barY + barH, ClickGUI.ACCENT.getRGB());
             }
